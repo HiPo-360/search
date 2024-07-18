@@ -29,7 +29,7 @@ def find_summary_paragraph(pdf_path, summary_keywords):
 
 if __name__ == "__main__":
     # Path to the PDF file you want to process
-    pdf_path = '1.pdf'
+    pdf_path = '3.pdf'
     
     # Keywords that indicate a summary
     summary_keywords = ["summary", "conclusion", "abstract", "concluding remarks"]
