@@ -4,3 +4,6 @@ gunicorn
 waitress
 pymongo[srv]
 pymupdf
+Flask 
+azure-ai-textanalytics 
+PyPDF2
