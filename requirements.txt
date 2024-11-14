@@ -1,3 +1,4 @@
 Flask==2.3.2
 PyMuPDF==1.22.5
-gensim
+gensim==3.8.3
+gunicorn
