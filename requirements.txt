@@ -1,9 +1,3 @@
-flask
-nltk
-gunicorn
-waitress
-pymongo[srv]
-pymupdf
-Flask 
-azure-ai-textanalytics 
-PyPDF2
+Flask
+PyMuPDF
+gensim
