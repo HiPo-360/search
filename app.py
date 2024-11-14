@@ -1,114 +1,112 @@
- 
-# from flask import Flask, request, jsonify
-# import fitz  # PyMuPDF
-# from gensim.summarization import summarize
-
-# import os
-
-# app = Flask(__name__)
-
-# def summarize_pdf(pdf_path):
-#     pdf_document = fitz.open(pdf_path)
-#     full_text = ""
-#     for page_num in range(len(pdf_document)):
-#         page = pdf_document.load_page(page_num)
-#         full_text += page.get_text() + "\n"
-#     pdf_document.close()
-    
-#     # Ensure there is enough content for summarization
-#     if len(full_text.split()) < 50:  # Gensim may need more content to generate a summary
-#         return "Not enough content for summarization."
-
-#     # Summarize using Gensim
-#     try:
-#         summary = summarize(full_text, ratio=0.1)  # Adjust ratio for desired summary length
-#         return summary if summary else "Summary could not be generated."
-#     except ValueError:  # Gensim may raise an exception if the input text is too short
-#         return "Not enough content for summarization."
-
-# @app.route('/summarize', methods=['POST'])
-# def upload_and_summarize():
-#     if 'pdf' not in request.files:
-#         return jsonify({"error": "No PDF file uploaded."}), 400
-
-#     file = request.files['pdf']
-#     if file.filename == '':
-#         return jsonify({"error": "Empty filename provided."}), 400
-
-#     # Create a temporary file path to save the PDF
-#     temp_dir = '/tmp'  # For Azure, use os.environ.get('TEMP', '/tmp') if unsure
-#     pdf_path = os.path.join(temp_dir, file.filename)
-#     file.save(pdf_path)
-
-#     try:
-#         summary_text = summarize_pdf(pdf_path)
-#         return jsonify({"summary": summary_text})
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-#     finally:
-#         # Remove the temporary file to avoid clutter
-#         if os.path.exists(pdf_path):
-#             os.remove(pdf_path)
-
-# if __name__ == "__main__":
-#     # Use '0.0.0.0' to ensure the app runs on the server's IP
-#     app.run(host='0.0.0.0', port=5000, debug=True)
-
 from flask import Flask, request, jsonify
 import fitz  # PyMuPDF
-from sumy.parsers.plaintext import PlaintextParser
-from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.lsa import LsaSummarizer
-import os
+import re
+import io
 
 app = Flask(__name__)
 
-def summarize_text(text):
-    parser = PlaintextParser.from_string(text, Tokenizer("english"))
-    summarizer = LsaSummarizer()
-    summary = summarizer(parser.document, 3)  # Adjust the number of sentences
-    return " ".join([str(sentence) for sentence in summary])
-
-def summarize_pdf(pdf_path):
-    pdf_document = fitz.open(pdf_path)
-    full_text = ""
+# Function to find summary paragraphs in a PDF
+def find_summary_paragraph(pdf_file_stream):
+    # Open the provided PDF file from the in-memory stream
+    pdf_document = fitz.open(stream=pdf_file_stream, filetype="pdf")
+    
+    summary_paragraphs = []
+    
+    # Iterate through pages
     for page_num in range(len(pdf_document)):
         page = pdf_document.load_page(page_num)
-        full_text += page.get_text() + "\n"
+        text = page.get_text("text")
+        
+        # Split text into paragraphs
+        paragraphs = text.split('\n\n')
+        
+        # Check each paragraph for summary keywords
+        summary_keywords = ["summary", "conclusion", "abstract", "concluding remarks"]
+        for para in paragraphs:
+            if any(keyword in para.lower() for keyword in summary_keywords):
+                # Extract the sentences around the paragraph containing the keyword
+                relevant_data = extract_surrounding_sentences(text, para)
+                summary_paragraphs.append(relevant_data)
+    
+    # Close the PDF document
     pdf_document.close()
     
-    # Ensure there is enough content for summarization
-    if len(full_text.split()) < 50:
-        return "Not enough content for summarization."
+    # Return all valid data found
+    return summary_paragraphs
 
-    # Summarize using sumy
-    try:
-        summary = summarize_text(full_text)
-        return summary if summary else "Summary could not be generated."
-    except ValueError:
-        return "Not enough content for summarization."
+# Function to extract surrounding sentences
+def extract_surrounding_sentences(text, paragraph):
+    # Split the full text into sentences using regex for proper sentence-ending punctuation
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
+    
+    # Find the index of the paragraph in the text
+    para_start_idx = text.find(paragraph)
+    para_end_idx = para_start_idx + len(paragraph)
+    
+    # Find the surrounding sentences by checking the index
+    relevant_sentences = []
+    for sentence in sentences:
+        if para_start_idx <= text.find(sentence) <= para_end_idx:
+            if is_valid_sentence(sentence):  # Check if the sentence is valid
+                relevant_sentences.append(sentence.strip())
+    
+    # Add nearby sentences (before and after) for more context
+    surrounding_data = []
+    for i, sentence in enumerate(sentences):
+        # Include sentences that are relevant to the paragraph and longer than 2 words
+        if text.find(paragraph) <= text.find(sentence) <= text.find(paragraph) + len(paragraph):
+            if is_valid_sentence(sentence):  # Check if the sentence is valid
+                surrounding_data.append(sentence.strip())
+            
+            # Add previous sentence if valid
+            if i > 0 and is_valid_sentence(sentences[i - 1]):
+                surrounding_data.insert(0, sentences[i - 1].strip())  
+            
+            # Add next sentence if valid
+            if i + 1 < len(sentences) and is_valid_sentence(sentences[i + 1]):
+                surrounding_data.append(sentences[i + 1].strip())  
+    
+    # Clean the sentences by removing numbers and non-alphabetic characters
+    clean_data = clean_text(" ".join(surrounding_data))
+    
+    return clean_data
 
-@app.route('/summarize', methods=['POST'])
-def upload_and_summarize():
+# Helper function to determine if a sentence is valid
+def is_valid_sentence(sentence):
+    words = sentence.split()
+    
+    # Remove unwanted single words or fragments
+    if len(words) <= 2 or not any(word.isalpha() for word in words):  # Avoid fragments
+        return False
+    return True
+
+# Clean the extracted text by removing all numbers, decimal points, and non-alphabetic characters
+def clean_text(text):
+    cleaned_text = re.sub(r'[^a-zA-Z\s]', '', text)
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+    return cleaned_text
+
+@app.route('/extract', methods=['POST'])
+def extract():
+    # Check if a PDF file is in the request
     if 'pdf' not in request.files:
-        return jsonify({"error": "No PDF file uploaded."}), 400
+        return jsonify({"error": "No PDF file provided"}), 400
 
-    file = request.files['pdf']
-    if file.filename == '':
-        return jsonify({"error": "Empty filename provided."}), 400
-
-    temp_dir = '/tmp'
-    pdf_path = os.path.join(temp_dir, file.filename)
-    file.save(pdf_path)
+    # Save the uploaded file into memory
+    pdf_file = request.files['pdf'].read()  # Read the file as bytes
+    pdf_file_stream = io.BytesIO(pdf_file)  # Create a BytesIO stream from the byte data
 
     try:
-        summary_text = summarize_pdf(pdf_path)
-        return jsonify({"summary": summary_text})
+        # Pass the BytesIO stream directly to fitz.open using the `stream` parameter
+        summary_paragraphs = find_summary_paragraph(pdf_file_stream)
+        
+        if summary_paragraphs:
+            return jsonify({"summary_paragraphs": summary_paragraphs})
+        else:
+            return jsonify({"message": "No summary paragraph found."})
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    finally:
-        if os.path.exists(pdf_path):
-            os.remove(pdf_path)
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8000, debug=True)
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)

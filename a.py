@@ -68,7 +68,7 @@ def summarize_pdf(pdf_path):
     return summary
 
 if __name__ == "__main__":
-    pdf_path = '4.pdf'
+    pdf_path = '5.pdf'
     summary_text = summarize_pdf(pdf_path)
     print("Summary:")
     print(summary_text)
