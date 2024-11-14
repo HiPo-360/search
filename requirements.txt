@@ -1,4 +1,7 @@
+python-dev
+libatlas-base-dev
+
 Flask==2.3.2
 PyMuPDF==1.22.5
-gensim==3.8.3
+gensim==3.8.3 
 gunicorn
