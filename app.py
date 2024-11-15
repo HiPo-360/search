@@ -2,8 +2,26 @@ from flask import Flask, request, jsonify
 import fitz  # PyMuPDF
 import re
 import io
+from openai import AzureOpenAI
+
+
+
+
 
 app = Flask(__name__)
+
+# Azure OpenAI Configuration
+endpoint = "https://hipo-ai.openai.azure.com/"
+deployment = "gpt-4"
+api_key = "1Uty3zR2yIuFmz75r9nDwkAh3mLbNbWZu4XlFDn6AjBoP9foaAE0JQQJ99AJACYeBjFXJ3w3AAAAACOGOqBp"
+
+client = AzureOpenAI(
+    azure_endpoint=endpoint,
+    api_key=api_key,
+    api_version="2024-05-01-preview"
+)
+
+
 
 # Function to find summary paragraphs in a PDF
 def find_summary_paragraph(pdf_file_stream):
@@ -86,6 +104,115 @@ def clean_text(text):
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
     return cleaned_text
 
+
+
+
+def chunk_text(text, max_tokens=500):
+    """Split text into chunks of approximately `max_tokens`."""
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    current_length = 0
+
+    for word in words:
+        word_length = len(word)  # Approximation of token length
+        if current_length + word_length + 1 > max_tokens:  # +1 for space or separator
+            chunks.append(' '.join(current_chunk))
+            current_chunk = []
+            current_length = 0
+        current_chunk.append(word)
+        current_length += word_length + 1
+
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+
+    return chunks
+
+
+
+
+# Function to analyze the summary and extract competencies
+def analyze_paragraph(paragraph):
+    prompt_template = """
+    Analyze the following paragraph and identify which of these competencies/skills are mentioned or implied. 
+    For each identified competency, indicate if it's discussed positively or negatively.
+    Only include competencies that are clearly referenced or implied - do not force matches.
+    
+    Paragraph: {paragraph}
+    
+    Format your response exactly like this, including ONLY the competencies that are actually mentioned or implied:
+    Competency: Sentiment
+
+    For example:
+    Analytical Thinking: negative
+    Leadership Orientation: positive
+
+    """
+
+    keywords = [
+        "Leadership Orientation", "Persuasive Communication", "Result Orientation", "Change Champion", 
+        "Innovation mindset", "Customer Focus", "Team Management", "Coaching Orientation", 
+        "Delegating", "Data driven problem solving", "Talent Champion", "Direction", "Conflict Management", 
+        "Negotiation skills", "Active Listening", "Impactful communication", "Emotional Intelligence", 
+        "Synergy driven", "Inter-personal networking", "Collaboration mindset", "Political Acumen", 
+        "Global mindset", "Decision Making", "Decisiveness", "Strategic Thinking", "Organisation Stewardship", 
+        "Learning Orientation", "Creative Problem-Solving", "Analytical Thinking", "Growth Mindset", 
+        "Business Acumen", "Continuous Improvement Mindset", "Process Orientation", "Initiative taking", 
+        "Time Management", "Strategic Planning", "System driven", "Resilience", "Energetic", 
+        "Assertiveness", "Ambitious", "Self-Awareness", "Self driven", "Accountability", "Professionalism", 
+        "Dependability", "Adaptability"
+    ]
+
+    results = {}
+    chunks = chunk_text(paragraph, max_tokens=500)
+
+    for chunk in chunks:
+        prompt = prompt_template.format(paragraph=chunk)
+        completion = client.chat.completions.create(
+            model=deployment,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500,
+            temperature=0.3,
+            top_p=0.95,
+            frequency_penalty=0,
+            presence_penalty=0,
+            stream=False
+        )
+        
+        response = completion.choices[0].message.content.strip()
+        for line in response.split('\n'):
+            if ':' in line:
+                competency, sentiment = line.split(':', 1)
+                competency = competency.strip()
+                sentiment = sentiment.strip().lower()
+                if competency in keywords and sentiment in ['positive', 'negative']:
+                    results[competency] = sentiment
+
+    return results
+
+# Route to process summary text for competencies
+@app.route('/summary', methods=['POST'])
+def summary():
+    # Check if the request contains summary text
+    if 'summary' not in request.json:
+        return jsonify({"error": "No summary text provided"}), 400
+
+    # Extract the summary text from the request
+    summary_text = request.json['summary']
+    
+    try:
+        # Process the summary text and get the results
+        results = analyze_paragraph(summary_text)
+
+        if results:
+            return jsonify( results )
+        else:
+            return jsonify({"message": "No competencies found."})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/extract', methods=['POST'])
 def extract():
     # Check if a PDF file is in the request
@@ -109,4 +236,4 @@ def extract():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8000)
