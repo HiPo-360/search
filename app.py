@@ -278,7 +278,7 @@ def callsumarrextract():
                 results.append(processed_result)
 
         if results:
-            return jsonify({"summary_analysis": results})
+            return jsonify(results)
         else:
             return jsonify({"message": "No competencies found in the summary."})
 
