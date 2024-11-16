@@ -309,6 +309,7 @@ def extract():
         return jsonify({"error": str(e)}), 500
     
 
+ 
 # # Route to extract PDF content and send it for summary analysis
 # @app.route('/callsumarrextract', methods=['POST'])
 # def callsumarrextract():
@@ -334,14 +335,18 @@ def extract():
 #             return jsonify({"message": "No summary paragraph found."})
 
 #         # Step 4: Send the extracted summary to the summary processing function
-#         results = []
+#         combined_results = {}
 #         for paragraph in summary_paragraphs:
 #             processed_result = analyze_paragraph(paragraph)
 #             if processed_result:
-#                 results.append(processed_result)
+#                 for key, value in processed_result.items():
+#                     # Overwrite or retain the latest analysis if key already exists
+#                     combined_results[key] = value
 
-#         if results:
-#             return jsonify(results)
+#         if combined_results:
+#             print("Combined Results: ", combined_results)  # Print the results to check
+
+#             return jsonify(combined_results)
 #         else:
 #             return jsonify({"message": "No competencies found in the summary."})
 
@@ -350,8 +355,6 @@ def extract():
 #     except Exception as e:
 #         return jsonify({"error": str(e)}), 500
 
-
-# Route to extract PDF content and send it for summary analysis
 @app.route('/callsumarrextract', methods=['POST'])
 def callsumarrextract():
     # Parse the JSON request to get the PDF URL
@@ -364,7 +367,7 @@ def callsumarrextract():
     try:
         # Step 1: Fetch the PDF from the URL
         response = requests.get(pdf_url)
-        response.raise_for_status()  # Raise an error for unsuccessful requests
+        response.raise_for_status()
         
         # Step 2: Read the content into a BytesIO stream
         pdf_file_stream = io.BytesIO(response.content)
@@ -375,19 +378,27 @@ def callsumarrextract():
         if not summary_paragraphs:
             return jsonify({"message": "No summary paragraph found."})
 
-        # Step 4: Send the extracted summary to the summary processing function
+        # Step 4: Analyze and format the JSON into text
         combined_results = {}
         for paragraph in summary_paragraphs:
             processed_result = analyze_paragraph(paragraph)
             if processed_result:
-                for key, value in processed_result.items():
-                    # Overwrite or retain the latest analysis if key already exists
-                    combined_results[key] = value
+                combined_results.update(processed_result)
 
         if combined_results:
-            print("Combined Results: ", combined_results)  # Print the results to check
+            # Separate positives and negatives
+            positives = [key for key, value in combined_results.items() if value == "positive"]
+            negatives = [key for key, value in combined_results.items() if value == "negative"]
 
-            return jsonify(combined_results)
+            # Format as text
+            formatted_text = (
+                f"Positives: {', '.join(positives)}\n"
+                f"Negatives: {', '.join(negatives)}"
+            )
+            print("Formatted Text: ", formatted_text)  # Debugging
+
+            # Return as plain text
+            return formatted_text, 200, {'Content-Type': 'text/plain'}
         else:
             return jsonify({"message": "No competencies found in the summary."})
 
