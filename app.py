@@ -213,28 +213,7 @@ def summary():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# @app.route('/extract', methods=['POST'])
-# def extract():
-#     # Check if a PDF file is in the request
-#     if 'pdf' not in request.files:
-#         return jsonify({"error": "No PDF file provided"}), 400
-
-#     # Save the uploaded file into memory
-#     pdf_file = request.files['pdf'].read()  # Read the file as bytes
-#     pdf_file_stream = io.BytesIO(pdf_file)  # Create a BytesIO stream from the byte data
-
-#     try:
-#         summary_paragraphs = find_summary_paragraph(pdf_file_stream)
-        
-#         if summary_paragraphs:
-#             return jsonify({"summary_paragraphs": summary_paragraphs})
-#         else:
-#             return jsonify({"message": "No summary paragraph found."})
-    
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
+ 
 
 @app.route('/extract', methods=['POST'])
 def extract():
@@ -266,5 +245,50 @@ def extract():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+
+# Route to extract PDF content and send it for summary analysis
+@app.route('/callsumarrextract', methods=['POST'])
+def callsumarrextract():
+    # Parse the JSON request to get the PDF URL
+    data = request.get_json()
+    if not data or 'pdf' not in data:
+        return jsonify({"error": "No PDF URL provided"}), 400
+
+    pdf_url = data['pdf']
+
+    try:
+        # Step 1: Fetch the PDF from the URL
+        response = requests.get(pdf_url)
+        response.raise_for_status()  # Raise an error for unsuccessful requests
+        
+        # Step 2: Read the content into a BytesIO stream
+        pdf_file_stream = io.BytesIO(response.content)
+
+        # Step 3: Extract summary paragraphs from the PDF
+        summary_paragraphs = find_summary_paragraph(pdf_file_stream)
+
+        if not summary_paragraphs:
+            return jsonify({"message": "No summary paragraph found."})
+
+        # Step 4: Send the extracted summary to the summary processing function
+        results = []
+        for paragraph in summary_paragraphs:
+            processed_result = analyze_paragraph(paragraph)
+            if processed_result:
+                results.append(processed_result)
+
+        if results:
+            return jsonify({"summary_analysis": results})
+        else:
+            return jsonify({"message": "No competencies found in the summary."})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
