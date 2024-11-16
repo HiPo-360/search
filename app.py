@@ -385,6 +385,8 @@ def callsumarrextract():
                     combined_results[key] = value
 
         if combined_results:
+            print("Combined Results: ", combined_results)  # Print the results to check
+
             return jsonify(combined_results)
         else:
             return jsonify({"message": "No competencies found in the summary."})
@@ -396,4 +398,4 @@ def callsumarrextract():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=500)
+    app.run(debug=True, host='0.0.0.0', port=5000)
