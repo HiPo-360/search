@@ -53,10 +53,66 @@ def find_summary_paragraph(pdf_file_stream):
     # Return all valid data found
     return summary_paragraphs
 
+
+
+
+# # Function to extract surrounding sentences
+# def extract_surrounding_sentences(text, paragraph):
+#     # Split the full text into sentences using regex for proper sentence-ending punctuation
+#     sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
+    
+#     # Find the index of the paragraph in the text
+#     para_start_idx = text.find(paragraph)
+#     para_end_idx = para_start_idx + len(paragraph)
+    
+#     # Find the surrounding sentences by checking the index
+#     relevant_sentences = []
+#     for sentence in sentences:
+#         if para_start_idx <= text.find(sentence) <= para_end_idx:
+#             if is_valid_sentence(sentence):  # Check if the sentence is valid
+#                 relevant_sentences.append(sentence.strip())
+    
+#     # Add nearby sentences (before and after) for more context
+#     surrounding_data = []
+#     for i, sentence in enumerate(sentences):
+#         # Include sentences that are relevant to the paragraph and longer than 2 words
+#         if text.find(paragraph) <= text.find(sentence) <= text.find(paragraph) + len(paragraph):
+#             if is_valid_sentence(sentence):  # Check if the sentence is valid
+#                 surrounding_data.append(sentence.strip())
+            
+#             # Add previous sentence if valid
+#             if i > 0 and is_valid_sentence(sentences[i - 1]):
+#                 surrounding_data.insert(0, sentences[i - 1].strip())  
+            
+#             # Add next sentence if valid
+#             if i + 1 < len(sentences) and is_valid_sentence(sentences[i + 1]):
+#                 surrounding_data.append(sentences[i + 1].strip())  
+    
+#     # Clean the sentences by removing numbers and non-alphabetic characters
+#     clean_data = clean_text(" ".join(surrounding_data))
+    
+#     return clean_data
+
+# # Helper function to determine if a sentence is valid
+# def is_valid_sentence(sentence):
+#     words = sentence.split()
+    
+#     # Remove unwanted single words or fragments
+#     if len(words) <= 2 or not any(word.isalpha() for word in words):  # Avoid fragments
+#         return False
+#     return True
+
+# # Clean the extracted text by removing all numbers, decimal points, and non-alphabetic characters
+# def clean_text(text):
+#     cleaned_text = re.sub(r'[^a-zA-Z\s]', '', text)
+#     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+#     return cleaned_text
+
+
 # Function to extract surrounding sentences
 def extract_surrounding_sentences(text, paragraph):
     # Split the full text into sentences using regex for proper sentence-ending punctuation
-    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)\s(?=\.|\?)\s', text)
     
     # Find the index of the paragraph in the text
     para_start_idx = text.find(paragraph)
@@ -88,6 +144,9 @@ def extract_surrounding_sentences(text, paragraph):
     # Clean the sentences by removing numbers and non-alphabetic characters
     clean_data = clean_text(" ".join(surrounding_data))
     
+    # Remove any two-letter words
+    clean_data = ' '.join([word for word in clean_data.split() if len(word) > 2])
+
     return clean_data
 
 # Helper function to determine if a sentence is valid
@@ -104,6 +163,8 @@ def clean_text(text):
     cleaned_text = re.sub(r'[^a-zA-Z\s]', '', text)
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
     return cleaned_text
+
+
 
 
 
@@ -190,6 +251,8 @@ def analyze_paragraph(paragraph):
                     results[competency] = sentiment
 
     return results
+
+
 
 # Route to process summary text for competencies
 @app.route('/summary', methods=['POST'])
@@ -291,4 +354,4 @@ def callsumarrextract():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8000)
