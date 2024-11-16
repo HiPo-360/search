@@ -4,6 +4,7 @@ import re
 import io
 from openai import AzureOpenAI
 
+import requests
 
 
 
@@ -213,26 +214,57 @@ def summary():
         return jsonify({"error": str(e)}), 500
 
 
+# @app.route('/extract', methods=['POST'])
+# def extract():
+#     # Check if a PDF file is in the request
+#     if 'pdf' not in request.files:
+#         return jsonify({"error": "No PDF file provided"}), 400
+
+#     # Save the uploaded file into memory
+#     pdf_file = request.files['pdf'].read()  # Read the file as bytes
+#     pdf_file_stream = io.BytesIO(pdf_file)  # Create a BytesIO stream from the byte data
+
+#     try:
+#         summary_paragraphs = find_summary_paragraph(pdf_file_stream)
+        
+#         if summary_paragraphs:
+#             return jsonify({"summary_paragraphs": summary_paragraphs})
+#         else:
+#             return jsonify({"message": "No summary paragraph found."})
+    
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+
 @app.route('/extract', methods=['POST'])
 def extract():
-    # Check if a PDF file is in the request
-    if 'pdf' not in request.files:
-        return jsonify({"error": "No PDF file provided"}), 400
+    # Parse the JSON request to get the URL
+    data = request.get_json()
+    if not data or 'pdf' not in data:
+        return jsonify({"error": "No PDF URL provided"}), 400
 
-    # Save the uploaded file into memory
-    pdf_file = request.files['pdf'].read()  # Read the file as bytes
-    pdf_file_stream = io.BytesIO(pdf_file)  # Create a BytesIO stream from the byte data
+    pdf_url = data['pdf']
 
     try:
+        # Fetch the PDF file from the URL
+        response = requests.get(pdf_url)
+        response.raise_for_status()  # Raise an error if the request was not successful
+        
+        # Read the content and create a BytesIO stream
+        pdf_file_stream = io.BytesIO(response.content)
+
+        # Call your function to process the PDF
         summary_paragraphs = find_summary_paragraph(pdf_file_stream)
         
         if summary_paragraphs:
             return jsonify({"summary_paragraphs": summary_paragraphs})
         else:
             return jsonify({"message": "No summary paragraph found."})
-    
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8000)
