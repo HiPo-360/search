@@ -392,7 +392,7 @@ def callsumarrextract():
 
             # Format as text
             formatted_text = (
-                f"Positives: {', '.join(positives)}\n"
+                f"Positives: {', '.join(positives)}:\n"
                 f"Negatives: {', '.join(negatives)}"
             )
             print("Formatted Text: ", formatted_text)  # Debugging
