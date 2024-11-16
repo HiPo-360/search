@@ -224,7 +224,6 @@ def extract():
     pdf_file_stream = io.BytesIO(pdf_file)  # Create a BytesIO stream from the byte data
 
     try:
-        # Pass the BytesIO stream directly to fitz.open using the `stream` parameter
         summary_paragraphs = find_summary_paragraph(pdf_file_stream)
         
         if summary_paragraphs:
