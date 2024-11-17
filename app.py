@@ -258,25 +258,50 @@ def analyze_paragraph(paragraph):
 @app.route('/summary', methods=['POST'])
 def summary():
     # Check if the request contains summary text
-    if 'summary' not in request.json:
-        return jsonify({"error": "No summary text provided"}), 400
+    if not request.is_json or 'summary' not in request.json:
+        return jsonify({"error": "No summary text provided or invalid request format."}), 400
 
     # Extract the summary text from the request
     summary_text = request.json['summary']
-    
+
+    # Validate that summary_text is a string (paragraph)
+    if not isinstance(summary_text, str):
+        return jsonify({"error": "Invalid format: 'summary' must be a string (paragraph)."}), 400
+
     try:
-        # Process the summary text and get the results
-        results = analyze_paragraph(summary_text)
+        # Split the summary into paragraphs (if needed)
+        paragraphs = [summary_text] if '\n' not in summary_text else summary_text.split('\n')
+        combined_results = {}
+        for paragraph in paragraphs:
+            processed_result = analyze_paragraph(paragraph)
+            if processed_result:
+                combined_results.update(processed_result)
 
-        if results:
-            return jsonify( results )
+        if combined_results:
+            # Separate positives and negatives
+            positives = [key for key, value in combined_results.items() if value == "positive"]
+            negatives = [key for key, value in combined_results.items() if value == "negative"]
+
+            # Format as text
+            # formatted_text = (
+            #     f"Positives: {', '.join(positives) if positives else 'None'}\n"
+            #     f"Negatives: {', '.join(negatives) if negatives else 'None'}"
+            # )
+            formatted_text = (
+                f"Positives: {', '.join(positives)}\n"
+                f"Negatives: {', '.join(negatives)}"
+            )
+            print("Formatted Text: ", formatted_text)  # Debugging
+
+            # Return as plain text
+            return formatted_text, 200, {'Content-Type': 'text/plain'}
         else:
-            return jsonify({"message": "No competencies found."})
+            return jsonify({"message": "No competencies found in the summary."}), 200
 
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
- 
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 @app.route('/extract', methods=['POST'])
 def extract():
