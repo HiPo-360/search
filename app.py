@@ -56,59 +56,6 @@ def find_summary_paragraph(pdf_file_stream):
 
 
 
-# # Function to extract surrounding sentences
-# def extract_surrounding_sentences(text, paragraph):
-#     # Split the full text into sentences using regex for proper sentence-ending punctuation
-#     sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
-    
-#     # Find the index of the paragraph in the text
-#     para_start_idx = text.find(paragraph)
-#     para_end_idx = para_start_idx + len(paragraph)
-    
-#     # Find the surrounding sentences by checking the index
-#     relevant_sentences = []
-#     for sentence in sentences:
-#         if para_start_idx <= text.find(sentence) <= para_end_idx:
-#             if is_valid_sentence(sentence):  # Check if the sentence is valid
-#                 relevant_sentences.append(sentence.strip())
-    
-#     # Add nearby sentences (before and after) for more context
-#     surrounding_data = []
-#     for i, sentence in enumerate(sentences):
-#         # Include sentences that are relevant to the paragraph and longer than 2 words
-#         if text.find(paragraph) <= text.find(sentence) <= text.find(paragraph) + len(paragraph):
-#             if is_valid_sentence(sentence):  # Check if the sentence is valid
-#                 surrounding_data.append(sentence.strip())
-            
-#             # Add previous sentence if valid
-#             if i > 0 and is_valid_sentence(sentences[i - 1]):
-#                 surrounding_data.insert(0, sentences[i - 1].strip())  
-            
-#             # Add next sentence if valid
-#             if i + 1 < len(sentences) and is_valid_sentence(sentences[i + 1]):
-#                 surrounding_data.append(sentences[i + 1].strip())  
-    
-#     # Clean the sentences by removing numbers and non-alphabetic characters
-#     clean_data = clean_text(" ".join(surrounding_data))
-    
-#     return clean_data
-
-# # Helper function to determine if a sentence is valid
-# def is_valid_sentence(sentence):
-#     words = sentence.split()
-    
-#     # Remove unwanted single words or fragments
-#     if len(words) <= 2 or not any(word.isalpha() for word in words):  # Avoid fragments
-#         return False
-#     return True
-
-# # Clean the extracted text by removing all numbers, decimal points, and non-alphabetic characters
-# def clean_text(text):
-#     cleaned_text = re.sub(r'[^a-zA-Z\s]', '', text)
-#     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
-#     return cleaned_text
-
-
 # Function to extract surrounding sentences
 def extract_surrounding_sentences(text, paragraph):
     # Split the full text into sentences using regex for proper sentence-ending punctuation
@@ -194,42 +141,77 @@ def chunk_text(text, max_tokens=500):
 
 
 # Function to analyze the summary and extract competencies
+# Function to analyze the summary and extract competencies
+# def analyze_paragraph(paragraph):
+#     prompt_template = """
+#     Analyze the following paragraph and identify which of these competencies/skills are mentioned or implied. 
+#     For each identified competency, indicate if it's discussed positively or negatively.
+#     Then, generate a descriptive sentence explaining why the competencies are positive or negative based on the paragraph.
+#     If no weaknesses are explicitly mentioned, infer one based on potential areas of improvement.
+#     If no strengths are explicitly mentioned, infer one based on any positive aspects present.
+    
+#     Paragraph: {paragraph}
+
+#     Format your response exactly like this:
+
+#     Positive: (A descriptive sentence explaining the positive competencies and why they are positive based on the paragraph.)
+#     Negative: (A descriptive sentence explaining the negative competencies and why they are negative based on the paragraph.)
+#     """
+
+#     results = {"positive": "", "negative": ""}
+#     chunks = chunk_text(paragraph, max_tokens=500)
+
+#     for chunk in chunks:
+#         prompt = prompt_template.format(paragraph=chunk)
+#         completion = client.chat.completions.create(
+#             model=deployment,
+#             messages=[{"role": "user", "content": prompt}],
+#             max_tokens=500,
+#             temperature=0.3,
+#             top_p=0.95,
+#             frequency_penalty=0,
+#             presence_penalty=0,
+#             stream=False
+#         )
+        
+#         response = completion.choices[0].message.content.strip()
+#         for line in response.split('\n'):
+#             if line.lower().startswith("positive:"):
+#                 results["positive"] = line.replace("Positive:", "").strip()
+#             elif line.lower().startswith("negative:"):
+#                 results["negative"] = line.replace("Negative:", "").strip()
+
+#     # Ensure output always has a positive and a negative competency
+#     if not results["positive"]:
+#         results["positive"] = "The individual demonstrates a willingness to engage with the topic, showing some level of interest and effort in the discussion."
+#     if not results["negative"]:
+#         results["negative"] = "While competent in some areas, there is room for improvement in adaptability and flexibility, as a more open approach to different perspectives could enhance effectiveness."
+
+#     return f"Positive: {results['positive']}\nNegative: {results['negative']}"
+
 def analyze_paragraph(paragraph):
     prompt_template = """
-    Analyze the following paragraph and identify which of these competencies/skills are mentioned or implied. 
+    Analyze the following information and identify which of these competencies/skills are mentioned or implied. 
     For each identified competency, indicate if it's discussed positively or negatively.
-    Only include competencies that are clearly referenced or implied - do not force matches.
-    
-    Paragraph: {paragraph}
-    
-    Format your response exactly like this, including ONLY the competencies that are actually mentioned or implied:
-    Competency: Sentiment
+    Then, generate a descriptive sentence explaining why the competencies are positive or negative based on the information.
+    If no weaknesses are explicitly mentioned, infer one based on potential areas of improvement.
+    If no strengths are explicitly mentioned, infer one based on any positive aspects present.
 
-    For example:
-    Analytical Thinking: negative
-    Leadership Orientation: positive
+   
+    {paragraph}
+
+    Format your response exactly like this:
+
+    Positive: (A descriptive sentence explaining the positive competencies and why they are positive based on the user information.)
+    Negative: (A descriptive sentence explaining the negative competencies and why they are negative based on the information.)
 
     """
 
-    keywords = [
-        "Leadership Orientation", "Persuasive Communication", "Result Orientation", "Change Champion", 
-        "Innovation mindset", "Customer Focus", "Team Management", "Coaching Orientation", 
-        "Delegating", "Data driven problem solving", "Talent Champion", "Direction", "Conflict Management", 
-        "Negotiation skills", "Active Listening", "Impactful communication", "Emotional Intelligence", 
-        "Synergy driven", "Inter-personal networking", "Collaboration mindset", "Political Acumen", 
-        "Global mindset", "Decision Making", "Decisiveness", "Strategic Thinking", "Organisation Stewardship", 
-        "Learning Orientation", "Creative Problem-Solving", "Analytical Thinking", "Growth Mindset", 
-        "Business Acumen", "Continuous Improvement Mindset", "Process Orientation", "Initiative taking", 
-        "Time Management", "Strategic Planning", "System driven", "Resilience", "Energetic", 
-        "Assertiveness", "Ambitious", "Self-Awareness", "Self driven", "Accountability", "Professionalism", 
-        "Dependability", "Adaptability"
-    ]
-
-    results = {}
+    results = {"positive": "", "negative": ""}
     chunks = chunk_text(paragraph, max_tokens=500)
 
     for chunk in chunks:
-        prompt = prompt_template.format(paragraph=chunk)
+        prompt = prompt_template + f"\n\n{chunk}"
         completion = client.chat.completions.create(
             model=deployment,
             messages=[{"role": "user", "content": prompt}],
@@ -240,68 +222,52 @@ def analyze_paragraph(paragraph):
             presence_penalty=0,
             stream=False
         )
-        
+
         response = completion.choices[0].message.content.strip()
         for line in response.split('\n'):
-            if ':' in line:
-                competency, sentiment = line.split(':', 1)
-                competency = competency.strip()
-                sentiment = sentiment.strip().lower()
-                if competency in keywords and sentiment in ['positive', 'negative']:
-                    results[competency] = sentiment
+            if line.lower().startswith("positive:"):
+                results["positive"] = line.replace("Positive:", "").strip()
+            elif line.lower().startswith("negative:"):
+                results["negative"] = line.replace("Negative:", "").strip()
 
-    return results
+    # Ensure output always has a positive and negative insight
+    if not results["positive"]:
+        results["positive"] = "Demonstrates a strategic mindset, with a focus on achieving impactful results through structured decision-making."
+    if not results["negative"]:
+        results["negative"] = "Could benefit from a more flexible approach, balancing structure with adaptability to navigate complex challenges."
 
+    return f"Positive: {results['positive']}\nNegative: {results['negative']}"
 
 
 # Route to process summary text for competencies
 @app.route('/summary', methods=['POST'])
 def summary():
-    # Check if the request contains summary text
     if not request.is_json or 'summary' not in request.json:
         return jsonify({"error": "No summary text provided or invalid request format."}), 400
 
-    # Extract the summary text from the request
     summary_text = request.json['summary']
-
-    # Validate that summary_text is a string (paragraph)
+    
     if not isinstance(summary_text, str):
         return jsonify({"error": "Invalid format: 'summary' must be a string (paragraph)."}), 400
 
     try:
-        # Split the summary into paragraphs (if needed)
         paragraphs = [summary_text] if '\n' not in summary_text else summary_text.split('\n')
-        combined_results = {}
+        formatted_responses = []
+
         for paragraph in paragraphs:
             processed_result = analyze_paragraph(paragraph)
-            if processed_result:
-                combined_results.update(processed_result)
+            formatted_responses.append(processed_result)
 
-        if combined_results:
-            # Separate positives and negatives
-            positives = [key for key, value in combined_results.items() if value == "positive"]
-            negatives = [key for key, value in combined_results.items() if value == "negative"]
+        final_response = "\n".join(formatted_responses)
+        print("Final Output: ", final_response)  # Debugging
 
-            # Format as text
-            # formatted_text = (
-            #     f"Positives: {', '.join(positives) if positives else 'None'}\n"
-            #     f"Negatives: {', '.join(negatives) if negatives else 'None'}"
-            # )
-            formatted_text = (
-                f"Positives: {', '.join(positives)}\n"
-                f"Negatives: {', '.join(negatives)}"
-            )
-            print("Formatted Text: ", formatted_text)  # Debugging
-
-            # Return as plain text
-            return formatted_text, 200, {'Content-Type': 'text/plain'}
-        else:
-            return jsonify({"message": "No competencies found in the summary."}), 200
+        return final_response, 200, {'Content-Type': 'text/plain'}
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
 
 @app.route('/extract', methods=['POST'])
 def extract():
@@ -334,104 +300,39 @@ def extract():
         return jsonify({"error": str(e)}), 500
     
 
- 
-# # Route to extract PDF content and send it for summary analysis
-# @app.route('/callsumarrextract', methods=['POST'])
-# def callsumarrextract():
-#     # Parse the JSON request to get the PDF URL
-#     data = request.get_json()
-#     if not data or 'pdf' not in data:
-#         return jsonify({"error": "No PDF URL provided"}), 400
-
-#     pdf_url = data['pdf']
-
-#     try:
-#         # Step 1: Fetch the PDF from the URL
-#         response = requests.get(pdf_url)
-#         response.raise_for_status()  # Raise an error for unsuccessful requests
-        
-#         # Step 2: Read the content into a BytesIO stream
-#         pdf_file_stream = io.BytesIO(response.content)
-
-#         # Step 3: Extract summary paragraphs from the PDF
-#         summary_paragraphs = find_summary_paragraph(pdf_file_stream)
-
-#         if not summary_paragraphs:
-#             return jsonify({"message": "No summary paragraph found."})
-
-#         # Step 4: Send the extracted summary to the summary processing function
-#         combined_results = {}
-#         for paragraph in summary_paragraphs:
-#             processed_result = analyze_paragraph(paragraph)
-#             if processed_result:
-#                 for key, value in processed_result.items():
-#                     # Overwrite or retain the latest analysis if key already exists
-#                     combined_results[key] = value
-
-#         if combined_results:
-#             print("Combined Results: ", combined_results)  # Print the results to check
-
-#             return jsonify(combined_results)
-#         else:
-#             return jsonify({"message": "No competencies found in the summary."})
-
-#     except requests.exceptions.RequestException as e:
-#         return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
 @app.route('/callsumarrextract', methods=['POST'])
 def callsumarrextract():
-    # Parse the JSON request to get the PDF URL
-    data = request.get_json()
-    if not data or 'pdf' not in data:
-        return jsonify({"error": "No PDF URL provided"}), 400
+    if not request.is_json or 'pdf' not in request.json:
+        return jsonify({"error": "No PDF URL provided or invalid request format."}), 400
 
-    pdf_url = data['pdf']
-
+    pdf_url = request.json['pdf']
+    
     try:
-        # Step 1: Fetch the PDF from the URL
         response = requests.get(pdf_url)
         response.raise_for_status()
-        
-        # Step 2: Read the content into a BytesIO stream
         pdf_file_stream = io.BytesIO(response.content)
-
-        # Step 3: Extract summary paragraphs from the PDF
+        
+        # Extract all summary paragraphs
         summary_paragraphs = find_summary_paragraph(pdf_file_stream)
-
+        
         if not summary_paragraphs:
-            return jsonify({"message": "No summary paragraph found."})
+            return jsonify({"message": "No summary paragraph found."}), 200
+        
+        # Combine all paragraphs into a single text block
+        full_summary = "\n".join(summary_paragraphs)
 
-        # Step 4: Analyze and format the JSON into text
-        combined_results = {}
-        for paragraph in summary_paragraphs:
-            processed_result = analyze_paragraph(paragraph)
-            if processed_result:
-                combined_results.update(processed_result)
-
-        if combined_results:
-            # Separate positives and negatives
-            positives = [key for key, value in combined_results.items() if value == "positive"]
-            negatives = [key for key, value in combined_results.items() if value == "negative"]
-
-            # Format as text
-            formatted_text = (
-                f"Positives: {', '.join(positives)}\n"
-                f"Negatives: {', '.join(negatives)}"
-            )
-            print("Formatted Text: ", formatted_text)  # Debugging
-
-            # Return as plain text
-            return formatted_text, 200, {'Content-Type': 'text/plain'}
-        else:
-            return jsonify({"message": "No competencies found in the summary."})
-
+        # Process the full summary instead of each paragraph separately
+        final_response = analyze_paragraph(full_summary)
+        
+        print("Final Output: ", final_response)  # Debugging
+        
+        return final_response, 200, {'Content-Type': 'text/plain'}
+    
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8000)
