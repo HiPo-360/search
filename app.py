@@ -202,8 +202,8 @@ def analyze_paragraph(paragraph):
 
     Format your response exactly like this:
 
-    Positive: (A descriptive sentence explaining the positive competencies and why they are positive based on the user information.)
-    Negative: (A descriptive sentence explaining the negative competencies and why they are negative based on the information.)
+            Positive: (A descriptive sentence explaining the positive competencies and why they are positive based on the user information.)
+            Negative: (A descriptive sentence explaining the negative competencies and why they are negative based on the information.)
 
     """
 
@@ -332,6 +332,300 @@ def callsumarrextract():
         return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
+
+# Route to process development coaching data
+@app.route('/development-coaching', methods=['POST'])
+def development_coaching():
+    if not request.is_json:
+        return jsonify({"error": "Invalid request format. JSON expected."}), 400
+
+    required_fields = [
+        'industry', 'function', 'current_level', 'experience',
+        'personal_aspiration', 'professional_aspiration', 'non_negotiable_values',
+        'skills', 'functional_technical_skills', 'five_year_goals',
+        'improvement_areas', 'strengths', 'selected_areas_to_work_on',
+        'cultural_working_preference'
+    ]
+
+    # Check if all required fields are present
+    missing_fields = [field for field in required_fields if field not in request.json]
+    if missing_fields:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+
+    try:
+        # Extract data from request
+        coaching_data = request.json
+
+        # Process coaching data and generate recommendations
+        recommendations = generate_coaching_recommendations(coaching_data)
+        
+        # Structure the response according to the required format
+        formatted_response = format_coaching_recommendations(recommendations)
+        
+        return formatted_response, 200, {'Content-Type': 'text/plain'}
+
+    except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
+def generate_coaching_recommendations(coaching_data):
+    """Process the coaching data using Azure OpenAI to generate recommendations"""
+    
+    # Create prompt with template and coaching data
+    prompt_template = """
+You are an expert development coach with deep expertise in behavioral economics, nudge theory, and personalized coaching. 
+Use the following demographic and profile data to create tailored recommendations for personal and professional growth.
+
+### Demographic Data:
+1. Industry: {industry}
+2. Function: {function}
+3. Current Level: {current_level}
+4. Experience: {experience}
+
+### Person's Profile:
+1. Personal Aspiration: {personal_aspiration}
+2. Professional Aspiration: {professional_aspiration}
+3. Non-Negotiable Values: {non_negotiable_values}
+4. Professional Skills Profile:
+   - Skill to Plan and Execute: {skills[plan_and_execute]} out of 5
+   - Skill to Connect and Build Trusting Relationships: {skills[connect_and_build_trusting_relationships]} out of 5
+   - Skill to Think and Decide: {skills[think_and_decide]} out of 5
+   - Skill to Learn and Grow: {skills[learn_and_grow]} out of 5
+5. Functional/Technical Skills: {functional_technical_skills}
+6. Five-Year Goals:
+   - Realistic Goal: {five_year_goals[realistic_goal]}
+   - Aspirational Goal: {five_year_goals[aspirational_goal]}
+7. Improvement Areas: {improvement_areas}
+8. Strengths: {strengths}
+
+### Selected Areas to Work On: {selected_areas_to_work_on}
+### Cultural Working Preference: {cultural_working_preference}
+
+Generate a JSON response with the following structure:
+{{
+  "targeted_questions": [
+    {{
+      "topic": "Topic area (e.g., Delegation)",
+      "question": "Specific behavioral question",
+      "bias": "Name and brief explanation of bias"
+    }},
+    // Two more questions
+  ],
+  "practical_actions": [
+    {{
+      "name": "Action name",
+      "instruction": "Specific step-by-step instruction taking less than 2 minutes",
+      "rationale": "Clear rationale linking to profile data"
+    }},
+    // Two more actions
+  ],
+  "strategic_actions": [
+    {{
+      "title": "Strategic action title",
+      "steps": ["Step 1", "Step 2", "Step 3"],
+      "rationale": "Strategic rationale linking to career goals"
+    }},
+    // One more action
+  ],
+  "blind_spots": [
+    {{
+      "name": "Blind spot name",
+      "risk": "Why it's a risk",
+      "impact": "Impact on aspirations and values",
+      "solution": "Solution"
+    }},
+    // Three more blind spots
+  ],
+  "commitment_plan": {{
+    "immediate": "Specific action for this week",
+    "short_term": "Specific action for next 30 days",
+    "mid_term": "Specific action for next 90 days",
+    "long_term": "Specific action for ongoing"
+  }}
+}}
+
+Your recommendations must cover these themes:
+- Delegation and control
+- Decision-making patterns
+- Trust and relationship building
+- Work-life balance
+- Leadership scaling
+"""
+    
+    # Format prompt with coaching data
+    formatted_prompt = prompt_template.format(**coaching_data)
+    
+    try:
+        # Call Azure OpenAI for completion
+        completion = client.chat.completions.create(
+            model=deployment,
+            messages=[{"role": "user", "content": formatted_prompt}],
+            max_tokens=1500,
+            temperature=0.3,
+            top_p=0.95,
+            frequency_penalty=0,
+            presence_penalty=0,
+            stream=False
+        )
+        
+        # Extract and parse the response
+        ai_response = completion.choices[0].message.content
+        recommendations = json.loads(ai_response)
+        
+        return recommendations
+        
+    except Exception as e:
+        print(f"Error calling Azure OpenAI: {str(e)}")
+        # Return default recommendations if API call fails
+        return get_default_recommendations(coaching_data)
+
+def get_default_recommendations(coaching_data):
+    """Return default recommendations if the AI call fails"""
+    return {
+        'targeted_questions': [
+            {
+                'topic': 'Delegation',
+                'question': 'How might your need for control be limiting your teams growth?',
+                'bias': 'Ownership Bias – Tendency to value what youve created more than others work'
+            },
+            {
+                'topic': 'Decision Making',
+                'question': 'When was the last time you made a decision with incomplete information?',
+                'bias': 'Analysis Paralysis – Overvaluing perfect information at cost of timeliness'
+            },
+            {
+                'topic': 'Trust Building',
+                'question': 'What team members capabilities have you underestimated recently?',
+                'bias': 'Competence Bias – Assuming others cannot match your standards'
+            }
+        ],
+        'practical_actions': [
+            {
+                'name': 'Two-Minute Delegation Exercise',
+                'instruction': 'Identify one task youre currently doing and write down who could do it instead',
+                'rationale': f"Builds the habit of looking for delegation opportunities based on your goal to {coaching_data['professional_aspiration']}"
+            },
+            {
+                'name': 'Decision Timeboxing',
+                'instruction': 'Set a timer for important decisions based on their impact - 5 minutes for small, 30 for medium, 24 hours for large',
+                'rationale': 'Prevents overthinking while maintaining quality aligned with your analytical strengths'
+            },
+            {
+                'name': 'Trust Deposit',
+                'instruction': 'Each morning, identify one opportunity to express confidence in a team members abilities',
+                'rationale': f"Systematically builds psychological safety while addressing your improvement area of {coaching_data['improvement_areas']}"
+            }
+        ],
+        'strategic_actions': [
+            {
+                'title': 'Delegation System Implementation',
+                'steps': [
+                    'Map current responsibilities',
+                    'Identify delegation candidates for each area',
+                    'Schedule handover meetings'
+                ],
+                'rationale': f"Creates structured progress toward your five-year goal of {coaching_data['five_year_goals']['aspirational_goal']} while addressing control tendencies"
+            },
+            {
+                'title': 'Decision Framework Adoption',
+                'steps': [
+                    'Document your decision criteria',
+                    'Create templates for different decision types',
+                    'Share framework with team for feedback'
+                ],
+                'rationale': 'Systematizes your strong analytical thinking while making it accessible to others'
+            }
+        ],
+        'blind_spots': [
+            {
+                'name': 'Perfectionism in Others',
+                'risk': 'Setting unrealistic standards based on your own capabilities',
+                'impact': f"Creates tension between your aspiration for team growth and your value of {coaching_data['non_negotiable_values'][0] if coaching_data['non_negotiable_values'] else 'excellence'}",
+                'solution': 'Define "good enough" criteria for each role and deliverable'
+            },
+            {
+                'name': 'Relationship Building as "Extra"',
+                'risk': 'Treating relationship development as secondary to task completion',
+                'impact': 'Undermines your aspiration for senior leadership which requires strong networks',
+                'solution': 'Schedule relationship building as a priority task with measurable outcomes'
+            },
+            {
+                'name': 'Over-reliance on Technical Skills',
+                'risk': 'Defaulting to technical solutions when people solutions are needed',
+                'impact': 'Creates disconnect between your value of people development and your behavior',
+                'solution': 'Ask "Is this a technical or people challenge?" before responding to problems'
+            },
+            {
+                'name': 'Work-Life Imbalance',
+                'risk': 'Sacrificing personal goals for professional achievement',
+                'impact': f"Creates long-term conflict with personal aspirations like {coaching_data['personal_aspiration']}",
+                'solution': 'Define non-negotiable personal commitments and block calendar accordingly'
+            }
+        ],
+        'commitment_plan': {
+            'immediate': 'Identify three tasks to delegate this week',
+            'short_term': 'Implement decision timeboxing framework',
+            'mid_term': 'Complete delegation mapping for all responsibilities',
+            'long_term': 'Monthly review of blind spot mitigation progress'
+        }
+    }
+
+def format_coaching_recommendations(recommendations):
+    """Format the recommendations according to the required structure"""
+    output = []
+    
+    # A. Targeted Development Questions
+    output.append("A. Targeted Development Questions")
+    for i, q in enumerate(recommendations['targeted_questions'], 1):
+        output.append(f"{q['topic']}")
+        output.append(f"{q['question']}")
+        output.append(f"• Bias Addressed: {q['bias']}")
+        if i < len(recommendations['targeted_questions']):
+            output.append("")   
+    
+    output.append("\n")  
+    
+    # B. Three Practical and Easy-to-Do Actions
+    output.append("B. Three Practical and Easy-to-Do Actions")
+    for i, action in enumerate(recommendations['practical_actions'], 1):
+        output.append(f"{i}. \"{action['name']}\"")
+        output.append(f"• {action['instruction']}")
+        output.append(f"• Why? {action['rationale']}")
+        if i < len(recommendations['practical_actions']):
+            output.append("")  # Empty line between actions
+    
+    output.append("\n")  # Separator between sections
+    
+    # C. Two Most Relevant and Impactful Actions
+    output.append("C. Two Most Relevant and Impactful Actions")
+    for i, action in enumerate(recommendations['strategic_actions'], 1):
+        output.append(f"{i}. {action['title']}")
+        for j, step in enumerate(action['steps'], 1):
+            output.append(f"• Step {j}: {step}")
+        output.append(f"• Why? {action['rationale']}")
+        if i < len(recommendations['strategic_actions']):
+            output.append("")  # Empty line between actions
+    
+    output.append("\n")  # Separator between sections
+    
+    # D. Blind Spots
+    output.append("D. Blind Spots")
+    output.append("| Blind Spot | Why It's a Risk | Impact on Aspirations & Values | Solution |")
+    output.append("|------------|----------------|--------------------------------|----------|")
+    for spot in recommendations['blind_spots']:
+        output.append(f"| {spot['name']} | {spot['risk']} | {spot['impact']} | {spot['solution']} |")
+    
+    output.append("\n")  # Separator between sections
+    
+    # E. Next Steps & Commitment Plan
+    output.append("E. Next Steps & Commitment Plan")
+    output.append(f"1. Immediate Action (This Week): {recommendations['commitment_plan']['immediate']}")
+    output.append(f"2. Short-Term (Next 30 Days): {recommendations['commitment_plan']['short_term']}")
+    output.append(f"3. Mid-Term (Next 90 Days): {recommendations['commitment_plan']['mid_term']}")
+    output.append(f"4. Long-Term (Ongoing): {recommendations['commitment_plan']['long_term']}")
+    
+    return "\n".join(output)
+
 
 
 if __name__ == '__main__':
