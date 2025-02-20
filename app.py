@@ -361,13 +361,13 @@ def development_coaching():
         recommendations = generate_coaching_recommendations(coaching_data)
         
         # Structure the response according to the required format
-        # formatted_response = format_coaching_recommendations(recommendations)
+        formatted_response = format_coaching_recommendations(recommendations)
         
-        # return formatted_response, 200, {'Content-Type': 'text/plain'}
+        return formatted_response, 200, {'Content-Type': 'text/plain'}
 
-        formatted_response = format_coaching_recommendations_json(recommendations)
+        # formatted_response = format_coaching_recommendations_json(recommendations)
         
-        return formatted_response, 200, {'Content-Type': 'application/json'}
+        # return formatted_response, 200, {'Content-Type': 'application/json'}
 
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
