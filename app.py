@@ -361,9 +361,13 @@ def development_coaching():
         recommendations = generate_coaching_recommendations(coaching_data)
         
         # Structure the response according to the required format
-        formatted_response = format_coaching_recommendations(recommendations)
+        # formatted_response = format_coaching_recommendations(recommendations)
         
-        return formatted_response, 200, {'Content-Type': 'text/plain'}
+        # return formatted_response, 200, {'Content-Type': 'text/plain'}
+
+        formatted_response = format_coaching_recommendations_json(recommendations)
+        
+        return formatted_response, 200, {'Content-Type': 'application/json'}
 
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
@@ -569,6 +573,58 @@ def get_default_recommendations(coaching_data):
             'long_term': 'Monthly review of blind spot mitigation progress'
         }
     }
+
+    
+def format_coaching_recommendations_json(recommendations):
+    """Format the recommendations into a structured JSON format"""
+    
+    output = {
+        "A. Targeted Development Questions": [
+            {
+                "Topic": q['topic'],
+                "Question": q['question'],
+                "Bias Addressed": q['bias']
+            }
+            for q in recommendations['targeted_questions']
+        ],
+        
+        "B. Three Practical and Easy-to-Do Actions": [
+            {
+                "Action Name": action['name'],
+                "Instruction": action['instruction'],
+                "Why": action['rationale']
+            }
+            for action in recommendations['practical_actions']
+        ],
+        
+        "C. Two Most Relevant and Impactful Actions": [
+            {
+                "Title": action['title'],
+                "Steps": [f"Step {j + 1}: {step}" for j, step in enumerate(action['steps'])],
+                "Why": action['rationale']
+            }
+            for action in recommendations['strategic_actions']
+        ],
+        
+        "D. Blind Spots": [
+            {
+                "Blind Spot": spot['name'],
+                "Why It's a Risk": spot['risk'],
+                "Impact on Aspirations & Values": spot['impact'],
+                "Solution": spot['solution']
+            }
+            for spot in recommendations['blind_spots']
+        ],
+        
+        "E. Next Steps & Commitment Plan": {
+            "Immediate Action (This Week)": recommendations['commitment_plan']['immediate'],
+            "Short-Term (Next 30 Days)": recommendations['commitment_plan']['short_term'],
+            "Mid-Term (Next 90 Days)": recommendations['commitment_plan']['mid_term'],
+            "Long-Term (Ongoing)": recommendations['commitment_plan']['long_term']
+        }
+    }
+    
+    return jsonify(output)
 
 def format_coaching_recommendations(recommendations):
     """Format the recommendations according to the required structure"""
