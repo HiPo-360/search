@@ -782,6 +782,45 @@ Output JSON format:
     except Exception as e:
         raise ValueError(f"Error generating prompt: {str(e)}")
 
+# @app.route("/culture_preference", methods=["POST"])
+# def culture_preference():
+#     try:
+#         # Get and validate input data
+#         coaching_data = request.json
+#         if not coaching_data:
+#             return jsonify({"error": "No data provided"}), 400
+
+#         # Generate prompt
+#         formatted_prompt = generate_prompt1(coaching_data)
+
+#         # Call Azure OpenAI
+#         completion = client.chat.completions.create(
+#             model=deployment,
+#             messages=[{"role": "user", "content": formatted_prompt}],
+#             max_tokens=1500,
+#             temperature=0.3,
+#             top_p=0.95,
+#             frequency_penalty=0,
+#             presence_penalty=0,
+#             stream=False
+#         )
+
+#         # Extract and validate response
+#         ai_response = completion.choices[0].message.content
+#         try:
+#             recommendations = json.loads(ai_response)
+#             if not isinstance(recommendations, dict) or 'actions' not in recommendations:
+#                 return jsonify({"error": "Invalid AI response format"}), 500
+#             return jsonify(recommendations)
+#         except json.JSONDecodeError:
+#             return jsonify({"error": "Invalid JSON response from AI"}), 500
+
+#     except ValueError as ve:
+#         return jsonify({"error": str(ve)}), 400
+#     except Exception as e:
+#         print("Error calling Azure OpenAI:", str(e))
+#         return jsonify({"error": "Failed to generate recommendations"}), 500
+
 @app.route("/culture_preference", methods=["POST"])
 def culture_preference():
     try:
@@ -811,7 +850,11 @@ def culture_preference():
             recommendations = json.loads(ai_response)
             if not isinstance(recommendations, dict) or 'actions' not in recommendations:
                 return jsonify({"error": "Invalid AI response format"}), 500
-            return jsonify(recommendations)
+            
+            # Convert the list into a plain text string
+            actions_text = "\n".join(recommendations["actions"])
+            return actions_text, 200, {"Content-Type": "text/plain"}
+        
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid JSON response from AI"}), 500
 
@@ -821,119 +864,6 @@ def culture_preference():
         print("Error calling Azure OpenAI:", str(e))
         return jsonify({"error": "Failed to generate recommendations"}), 500
 
-
-
-
-
-# def generate_prompt(coaching_data):
-#     return f"""
-#     Analyze the cultural preferences and provide recommendations:
-
-#     1. **Individual vs Collective Achievement**
-#        - **Self Score:** {coaching_data['individual_vs_collective']['self_score']}
-#        - **Team Score:** {coaching_data['individual_vs_collective']['team_score']}
-#        - **Gap:** {abs(coaching_data['individual_vs_collective']['self_score'] - coaching_data['individual_vs_collective']['team_score'])}
-#        - **Definition:** A culture that values individual achievements and rewards personal excellence vs. a culture prioritizing collective achievement and shared success.
-
-#     2. **Team-Centric vs Customer-Centric Focus**
-#        - **Self Score:** {coaching_data['team_vs_customer']['self_score']}
-#        - **Team Score:** {coaching_data['team_vs_customer']['team_score']}
-#        - **Gap:** {abs(coaching_data['team_vs_customer']['self_score'] - coaching_data['team_vs_customer']['team_score'])}
-#        - **Definition:** A mindset prioritizing the team's internal needs vs. a focus on meeting external stakeholder needs.
-
-#     3. **Process vs Results Orientation**
-#        - **Self Score:** {coaching_data['process_vs_results']['self_score']}
-#        - **Team Score:** {coaching_data['process_vs_results']['team_score']}
-#        - **Gap:** {abs(coaching_data['process_vs_results']['self_score'] - coaching_data['process_vs_results']['team_score'])}
-#        - **Definition:** Security in following procedures vs. prioritizing outcomes and targets.
-
-#     4. **Personal vs Stakeholder Expectations**
-#        - **Self Score:** {coaching_data['process_vs_results']['self_score']}
-#        - **Team Score:** {coaching_data['process_vs_results']['team_score']}
-#        - **Gap:** {abs(coaching_data['process_vs_results']['self_score'] - coaching_data['process_vs_results']['team_score'])}
-#        - **Definition:** Driven by personal excellence vs. prioritizing stakeholder expectations.
-
-#     5. **Deliberate vs Radical Change Approach**
-#        - **Self Score:** {coaching_data['process_vs_results']['self_score']}
-#        - **Team Score:** {coaching_data['process_vs_results']['team_score']}
-#        - **Gap:** {abs(coaching_data['process_vs_results']['self_score'] - coaching_data['process_vs_results']['team_score'])}
-#        - **Definition:** Preferring slow, careful changes vs. embracing rapid, transformative shifts.
-
-#     6. **Structured vs Flexible Planning**
-#        - **Self Score:** {coaching_data['process_vs_results']['self_score']}
-#        - **Team Score:** {coaching_data['process_vs_results']['team_score']}
-#        - **Gap:** {abs(coaching_data['process_vs_results']['self_score'] - coaching_data['process_vs_results']['team_score'])}
-#        - **Definition:** Preferring detailed planning vs. adapting spontaneously to situations.
-
-#     7. **Competitive vs Collaborative Spirit**
-#        - **Self Score:** {coaching_data['process_vs_results']['self_score']}
-#        - **Team Score:** {coaching_data['process_vs_results']['team_score']}
-#        - **Gap:** {abs(coaching_data['process_vs_results']['self_score'] - coaching_data['process_vs_results']['team_score'])}
-#        - **Definition:** Thriving in competitive environments vs. finding fulfillment in teamwork.
-
-#     8. **Perfect vs Practical Solutions**
-#        - **Self Score:** {coaching_data['process_vs_results']['self_score']}
-#        - **Team Score:** {coaching_data['process_vs_results']['team_score']}
-#        - **Gap:** {abs(coaching_data['process_vs_results']['self_score'] - coaching_data['process_vs_results']['team_score'])}
-#        - **Definition:** Seeking perfect solutions aligned with values vs. prioritizing effective, adaptable approaches.
-
-
-#     Given these inputs, provide **3 actionable coaching recommendations** for each cultural preference.
-#     Output JSON format:
-#     {
-#       "actions": [
-#         "Action 1",
-#         "Action 2",
-#         "Action 3",
-#         "Action 4",
-#         "Action 5",
-#         "Action 6",
-#         "Action 7",
-#         "Action 8",
-#         "Action 9",
-#         "Action 10",
-#         "Action 11",
-#         "Action 12",
-#         "Action 13",
-#         "Action 14",
-#         "Action 15",
-#         "Action 16",
-#         "Action 17",
-#         "Action 18",
-#         "Action 19",
-#         "Action 20",
-#         "Action 21",
-#         "Action 22",
-#         "Action 23",
-#         "Action 24"
-#       ]
-#     }
-#     """
-
-# @app.route("/culture_preference", methods=["POST"])
-# def culture_preference():
-#     try:
-#         coaching_data = request.json
-#         formatted_prompt = generate_prompt(coaching_data)
-        
-#         completion = client.chat.completions.create(
-#             model=deployment,
-#             messages=[{"role": "user", "content": formatted_prompt}],
-#             max_tokens=1500,
-#             temperature=0.3,
-#             top_p=0.95,
-#             frequency_penalty=0,
-#             presence_penalty=0,
-#             stream=False
-#         )
-        
-#         ai_response = completion.choices[0].message.content
-#         recommendations = json.loads(ai_response)
-        
-#         return jsonify(recommendations)
-#     except Exception as e:
-#         print("Error calling Azure OpenAI:", str(e))
-#         return jsonify({"error": "Failed to generate recommendations"}), 500
 
 
 if __name__ == '__main__':
