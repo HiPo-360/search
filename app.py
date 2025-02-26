@@ -852,7 +852,7 @@ def culture_preference():
                 return jsonify({"error": "Invalid AI response format"}), 500
             
             # Convert the list into a plain text string
-            actions_text = "\n".join(recommendations["actions"])
+            actions_text = " ,,, ".join(recommendations["actions"])
             return actions_text, 200, {"Content-Type": "text/plain"}
         
         except json.JSONDecodeError:
