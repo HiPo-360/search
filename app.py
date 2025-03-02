@@ -672,10 +672,10 @@ def format_coaching_recommendations(recommendations):
     # output.append("|------------|----------------|--------------------------------|----------|")
     output.append("D. Blind Spots\n")
     for spot in recommendations['blind_spots']:
-        output.append(f"- **Blind Spot:** {spot['name']}")
-        output.append(f"  - **Why It's a Risk:** {spot['risk']}")
-        output.append(f"  - **Impact on Aspirations & Values:** {spot['impact']}")
-        output.append(f"  - **Solution:** {spot['solution']}\n")  # Extra newline for spacing between entries    
+        output.append(f"- Blind Spot: {spot['name']}")
+        output.append(f"  - Why It's a Risk: {spot['risk']}")
+        output.append(f"  - Impact on Aspirations & Values: {spot['impact']}")
+        output.append(f"  - Solution: {spot['solution']}\n")  # Extra newline for spacing between entries    
     # for spot in recommendations['blind_spots']:
     #     output.append(f"| {spot['name']} | {spot['risk']} | {spot['impact']} | {spot['solution']} |")
     
