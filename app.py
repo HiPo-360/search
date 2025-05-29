@@ -251,7 +251,9 @@ You are an expert feedback analyst.
 - Provide steps to address areas for improvement effectively.
 - Create a development plan with short-term (1-3 months) and long-term (6-12 months) goals.
 
-Respond in a structured, easy-to-read format.
+Respond clearly and concisely in **plain text**, without headings, bullets, or markdown formatting.
+Just write readable, paragraph-style insights with minimal structure.
+
 """
 
     completion = client.chat.completions.create(
