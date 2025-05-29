@@ -142,55 +142,7 @@ def chunk_text(text, max_tokens=500):
 
 
 
-# Function to analyze the summary and extract competencies
-# Function to analyze the summary and extract competencies
-# def analyze_paragraph(paragraph):
-#     prompt_template = """
-#     Analyze the following paragraph and identify which of these competencies/skills are mentioned or implied. 
-#     For each identified competency, indicate if it's discussed positively or negatively.
-#     Then, generate a descriptive sentence explaining why the competencies are positive or negative based on the paragraph.
-#     If no weaknesses are explicitly mentioned, infer one based on potential areas of improvement.
-#     If no strengths are explicitly mentioned, infer one based on any positive aspects present.
-    
-#     Paragraph: {paragraph}
-
-#     Format your response exactly like this:
-
-#     Positive: (A descriptive sentence explaining the positive competencies and why they are positive based on the paragraph.)
-#     Negative: (A descriptive sentence explaining the negative competencies and why they are negative based on the paragraph.)
-#     """
-
-#     results = {"positive": "", "negative": ""}
-#     chunks = chunk_text(paragraph, max_tokens=500)
-
-#     for chunk in chunks:
-#         prompt = prompt_template.format(paragraph=chunk)
-#         completion = client.chat.completions.create(
-#             model=deployment,
-#             messages=[{"role": "user", "content": prompt}],
-#             max_tokens=500,
-#             temperature=0.3,
-#             top_p=0.95,
-#             frequency_penalty=0,
-#             presence_penalty=0,
-#             stream=False
-#         )
-        
-#         response = completion.choices[0].message.content.strip()
-#         for line in response.split('\n'):
-#             if line.lower().startswith("positive:"):
-#                 results["positive"] = line.replace("Positive:", "").strip()
-#             elif line.lower().startswith("negative:"):
-#                 results["negative"] = line.replace("Negative:", "").strip()
-
-#     # Ensure output always has a positive and a negative competency
-#     if not results["positive"]:
-#         results["positive"] = "The individual demonstrates a willingness to engage with the topic, showing some level of interest and effort in the discussion."
-#     if not results["negative"]:
-#         results["negative"] = "While competent in some areas, there is room for improvement in adaptability and flexibility, as a more open approach to different perspectives could enhance effectiveness."
-
-#     return f"Positive: {results['positive']}\nNegative: {results['negative']}"
-
+ 
 def analyze_paragraph(paragraph):
     prompt_template = """
     Analyze the following information and identify which of these competencies/skills are mentioned or implied. 
@@ -267,6 +219,74 @@ def summary():
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+def analyze_insights(summaries):
+    combined_text = "\n\n".join([f"Report {i+1}:\n{summary}" for i, summary in enumerate(summaries)])
+
+    prompt = f"""
+You are an expert feedback analyst.
+
+1. **Extracting Key Insights from Reports**
+{combined_text}
+
+2. **Cross-Document Analysis**
+- Combine feedback from multiple reports and identify:
+    - Common strengths across all reports.
+    - Common improvement areas across all reports.
+    - Any contradictory feedback or outliers.
+- Create a summary of feedback trends across all uploaded reports. Highlight consistent themes and diverging opinions.
+
+3. **Linking Strengths and Improvement Areas**
+- Analyze the strengths and improvement areas listed. Are there any improvement areas that could be side effects or overextensions of the person’s strengths? Provide examples.
+- Highlight any potential trade-offs between strengths and improvement areas.
+
+4. **Identifying Blind Spots**
+- Based on this feedback, identify any potential blind spots for the individual.
+- What assumptions might the person be making about their own strengths or improvement areas based on this feedback? Suggest areas for reflection.
+
+5. **Actionable Insights**
+- Turn this feedback into actionable insights.
+- Suggest specific actions to leverage strengths further.
+- Provide steps to address areas for improvement effectively.
+- Create a development plan with short-term (1-3 months) and long-term (6-12 months) goals.
+
+Respond in a structured, easy-to-read format.
+"""
+
+    completion = client.chat.completions.create(
+        model=deployment,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=1200,
+        temperature=0.3,
+        top_p=0.95,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stream=False
+    )
+
+    response = completion.choices[0].message.content.strip()
+    return response
+
+
+@app.route('/insights', methods=['POST'])
+def insights():
+    if not request.is_json or 'summaries' not in request.json:
+        return jsonify({"error": "Missing 'summaries' field in request or invalid format."}), 400
+
+    summaries = request.json['summaries']
+
+    # Normalize input to a list of strings
+    if isinstance(summaries, str):
+        summaries = [summaries]
+    elif not isinstance(summaries, list) or not all(isinstance(item, str) for item in summaries):
+        return jsonify({"error": "'summaries' must be a string or a list of strings."}), 400
+
+    try:
+        result = analyze_insights(summaries)
+        print("Insight Output:\n", result)  # Debugging
+        return result, 200, {'Content-Type': 'text/plain'}
+
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 

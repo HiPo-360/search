@@ -1,0 +1,15 @@
+.vercel
+*.log
+*.pyc
+__pycache__
+
+# Environments 
+.env 
+.venv 
+env/ 
+myvenv/ 
+venv/ 
+ENV/ 
+env.bak/ 
+venv.bak/ 
+api/venv
