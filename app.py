@@ -221,45 +221,121 @@ def summary():
         return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+    
+# def analyze_insights(summaries):
+#     combined_text = "\n\n".join([f"Report {i+1}:\n{summary}" for i, summary in enumerate(summaries)])
+
+#     prompt = f"""
+# You are an expert feedback analyst.
+
+# 1. **Extracting Key Insights from Reports**
+# {combined_text}
+
+# 2. **Cross-Document Analysis**
+# - Combine feedback from multiple reports and identify:
+#     - Common strengths across all reports.
+#     - Common improvement areas across all reports.
+#     - Any contradictory feedback or outliers.
+# - Create a summary of feedback trends across all uploaded reports. Highlight consistent themes and diverging opinions.
+
+# 3. **Linking Strengths and Improvement Areas**
+# - Analyze the strengths and improvement areas listed. Are there any improvement areas that could be side effects or overextensions of the person’s strengths? Provide examples.
+# - Highlight any potential trade-offs between strengths and improvement areas.
+
+# 4. **Identifying Blind Spots**
+# - Based on this feedback, identify any potential blind spots for the individual.
+# - What assumptions might the person be making about their own strengths or improvement areas based on this feedback? Suggest areas for reflection.
+
+# 5. **Actionable Insights**
+# - Turn this feedback into actionable insights.
+# - Suggest specific actions to leverage strengths further.
+# - Provide steps to address areas for improvement effectively.
+# - Create a development plan with short-term (1-3 months) and long-term (6-12 months) goals.
+
+# Respond clearly and concisely in **plain text**, without headings, bullets, or markdown formatting.
+# Just write readable, paragraph-style insights with minimal structure.
+
+# """
+
+#     completion = client.chat.completions.create(
+#         model=deployment,
+#         messages=[{"role": "user", "content": prompt}],
+#         max_tokens=1200,
+#         temperature=0.3,
+#         top_p=0.95,
+#         frequency_penalty=0,
+#         presence_penalty=0,
+#         stream=False
+#     )
+
+#     response = completion.choices[0].message.content.strip()
+#     return response
+
+
+# @app.route('/insights', methods=['POST'])
+# def insights():
+#     if not request.is_json or 'summaries' not in request.json:
+#         return jsonify({"error": "Missing 'summaries' field in request or invalid format."}), 400
+
+#     summaries = request.json['summaries']
+
+#     # Normalize input to a list of strings
+#     if isinstance(summaries, str):
+#         summaries = [summaries]
+#     elif not isinstance(summaries, list) or not all(isinstance(item, str) for item in summaries):
+#         return jsonify({"error": "'summaries' must be a string or a list of strings."}), 400
+
+#     try:
+#         result = analyze_insights(summaries)
+#         print("Insight Output:\n", result)  # Debugging
+#         return result, 200, {'Content-Type': 'text/plain'}
+
+#     except Exception as e:
+#         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 def analyze_insights(summaries):
-    combined_text = "\n\n".join([f"Report {i+1}:\n{summary}" for i, summary in enumerate(summaries)])
+    summaries = [s.strip() for s in summaries if isinstance(s, str) and s.strip()]
+    combined_text = "\n\n".join([f"Report {i + 1}:\n{summary}" for i, summary in enumerate(summaries)])
 
     prompt = f"""
-You are an expert feedback analyst.
+    Strictly return ONLY the two requested paragraphs. No headings, lists, formatting, or extra comments.
 
-1. **Extracting Key Insights from Reports**
-{combined_text}
+    You are a trusted career coach. Your task is to ONLY return exactly two paragraphs in plain text, nothing more.
 
-2. **Cross-Document Analysis**
-- Combine feedback from multiple reports and identify:
-    - Common strengths across all reports.
-    - Common improvement areas across all reports.
-    - Any contradictory feedback or outliers.
-- Create a summary of feedback trends across all uploaded reports. Highlight consistent themes and diverging opinions.
+    Paragraph 1: Summarize longitudinal insights from the input reports — recurring strengths, consistent improvement areas, outliers, and blind spots. Show patterns and how the individual is evolving over time.
 
-3. **Linking Strengths and Improvement Areas**
-- Analyze the strengths and improvement areas listed. Are there any improvement areas that could be side effects or overextensions of the person’s strengths? Provide examples.
-- Highlight any potential trade-offs between strengths and improvement areas.
+    Paragraph 2: Provide clear strengths and growth opportunities in 2–3 lines each, in a motivational and actionable tone — no bullets or headings.
 
-4. **Identifying Blind Spots**
-- Based on this feedback, identify any potential blind spots for the individual.
-- What assumptions might the person be making about their own strengths or improvement areas based on this feedback? Suggest areas for reflection.
+    Task:
+    Summarize a psychometric or developmental report as a trusted career coach. Identify key strengths and areas of improvements in 2-3 lines each, focusing on critical insights for self-awareness and growth. Be specific, actionable, and motivational.
 
-5. **Actionable Insights**
-- Turn this feedback into actionable insights.
-- Suggest specific actions to leverage strengths further.
-- Provide steps to address areas for improvement effectively.
-- Create a development plan with short-term (1-3 months) and long-term (6-12 months) goals.
+    Example Output:
 
-Respond clearly and concisely in **plain text**, without headings, bullets, or markdown formatting.
-Just write readable, paragraph-style insights with minimal structure.
+    Strengths:
+    You excel at solving problems under pressure and inspire trust with your collaborative approach.
 
-"""
+    Growth Opportunities:
+    Improve time management to reduce stress and build confidence to take bold leadership steps.
+
+    <Input: uploaded report / data>
+
+    Example Output:
+
+    Your reports consistently highlight strong analytical skills and an ability to build trust in teams. These traits suggest you excel in problem-solving and collaboration, making you a natural fit for leadership roles. However, recurring feedback points to challenges in time management and decision-making under pressure, which could limit your effectiveness in high-stakes situations.
+
+    To grow, focus on leveraging your analytical skills to create structured workflows that improve time management. In the short term, adopt prioritization frameworks like Eisenhower Matrix. Long term, seek mentorship on leadership under pressure. Addressing these areas will let you unlock your full potential while avoiding blind spots like over-reliance on collaboration at the expense of timely decision-making
+
+    Here are the reports:
+
+    {combined_text}
+
+    Strictly return ONLY the two requested paragraphs. No headings, lists, formatting, or extra comments.
+    """
+
 
     completion = client.chat.completions.create(
         model=deployment,
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=1200,
+        max_tokens=1000,
         temperature=0.3,
         top_p=0.95,
         frequency_penalty=0,
@@ -267,8 +343,7 @@ Just write readable, paragraph-style insights with minimal structure.
         stream=False
     )
 
-    response = completion.choices[0].message.content.strip()
-    return response
+    return completion.choices[0].message.content.strip()
 
 
 @app.route('/insights', methods=['POST'])
@@ -278,17 +353,19 @@ def insights():
 
     summaries = request.json['summaries']
 
-    # Normalize input to a list of strings
     if isinstance(summaries, str):
         summaries = [summaries]
     elif not isinstance(summaries, list) or not all(isinstance(item, str) for item in summaries):
         return jsonify({"error": "'summaries' must be a string or a list of strings."}), 400
 
+    summaries = [s.strip() for s in summaries if s.strip()]
+    if not summaries:
+        return jsonify({"error": "No valid summaries found after filtering empty inputs."}), 400
+
     try:
         result = analyze_insights(summaries)
-        print("Insight Output:\n", result)  # Debugging
+        print("Insight Output:\n", result)
         return result, 200, {'Content-Type': 'text/plain'}
-
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
