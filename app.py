@@ -296,14 +296,9 @@ def analyze_insights(summaries):
     summaries = [s.strip() for s in summaries if isinstance(s, str) and s.strip()]
     combined_text = "\n\n".join([f"Report {i + 1}:\n{summary}" for i, summary in enumerate(summaries)])
 
+
     prompt = f"""
-    Strictly return ONLY the two requested paragraphs. No headings, lists, formatting, or extra comments.
-
-    You are a trusted career coach. Your task is to ONLY return exactly two paragraphs in plain text, nothing more.
-
-    Paragraph 1: Summarize longitudinal insights from the input reports — recurring strengths, consistent improvement areas, outliers, and blind spots. Show patterns and how the individual is evolving over time.
-
-    Paragraph 2: Provide clear strengths and growth opportunities in 2–3 lines each, in a motivational and actionable tone — no bullets or headings.
+    Section 1: Prompt for identifying strengths and weaknesses from each report
 
     Task:
     Summarize a psychometric or developmental report as a trusted career coach. Identify key strengths and areas of improvements in 2-3 lines each, focusing on critical insights for self-awareness and growth. Be specific, actionable, and motivational.
@@ -318,19 +313,24 @@ def analyze_insights(summaries):
 
     <Input: uploaded report / data>
 
-    Example Output:
 
-    Your reports consistently highlight strong analytical skills and an ability to build trust in teams. These traits suggest you excel in problem-solving and collaboration, making you a natural fit for leadership roles. However, recurring feedback points to challenges in time management and decision-making under pressure, which could limit your effectiveness in high-stakes situations.
+    Section 2: Summary section:
 
-    To grow, focus on leveraging your analytical skills to create structured workflows that improve time management. In the short term, adopt prioritization frameworks like Eisenhower Matrix. Long term, seek mentorship on leadership under pressure. Addressing these areas will let you unlock your full potential while avoiding blind spots like over-reliance on collaboration at the expense of timely decision-making
+    Play the role of a trusted coach. You have been shared with longitudinal psychometric data (strengths and improvement areas across reports and testimonials by year). Analyse trends across the longitudinal data in terms of strengths and improvement and, provide a 2-paragraph insight covering these key areas:
+
+    Common Strength Themes: Identify recurring strengths and what they reveal about the individual’s core capabilities.
+    Common Improvement Themes: Highlight consistent areas for growth and their impact.
+    Contradictory Feedback or Outliers: Identify any contradictions or unique patterns across reports.
+    Links Between Strengths and Improvement Areas: Examine the Relationship Between Strengths and Improvement Areas (if any improvement area is a possible side effect of a strength of that person)
+    Blind Spots: Point out overlooked areas of potential concern.
+    Recommended Actions: Provide short- and long-term steps to maximize strengths and address improvement areas.
 
     Here are the reports:
 
     {combined_text}
 
-    Strictly return ONLY the two requested paragraphs. No headings, lists, formatting, or extra comments.
+    Strictly return ONLY the final two-paragraph insight and the concise strengths and growth opportunities. No headings, no formatting, and no extra text.
     """
-
 
     completion = client.chat.completions.create(
         model=deployment,
@@ -582,6 +582,8 @@ def generate_coaching_recommendations(coaching_data):
     prompt_template = """
 You are an expert development coach with deep expertise in behavioral economics, nudge theory, and personalized coaching. 
 Use the following demographic and profile data to create tailored recommendations for personal and professional growth.
+You are known for your depth of insight, clarity of thought and communication, use of language which is simple and devoid of jargon,
+ability to connect the dots,differentiate the critical from the not so critical and prioritise development areas andhighlight blindspots which the coachee might have missed by analysing how theirstrengths when taken to an extreme can become a weakness.
 
 ### Demographic Data:
 1. Industry: {industry}
@@ -651,14 +653,15 @@ Generate a JSON response with the following structure:
   }}
 }}
 
-Your recommendations must cover these themes:
-- Delegation and control
-- Decision-making patterns
-- Trust and relationship building
-- Work-life balance
-- Leadership scaling
+
 """
-    
+#   Your recommendations must cover these themes:
+# - Delegation and control
+# - Decision-making patterns
+# - Trust and relationship building
+# - Work-life balance
+# - Leadership scaling  
+
     # Format prompt with coaching data
     formatted_prompt = prompt_template.format(**coaching_data)
     
