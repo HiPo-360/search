@@ -528,14 +528,14 @@ def callsumarrextract():
         # Extract all summary paragraphs
         summary_paragraphs = find_summary_paragraph(pdf_file_stream)
 
-        if not summary_paragraphs:
-            print("No summary keywords found. Falling back to full text.")
-            full_text = extract_full_text(pdf_file_stream)
-            final_response = analyze_paragraph(full_text)
-            return final_response, 200, {'Content-Type': 'text/plain'}
-
         # if not summary_paragraphs:
-        #     return jsonify({"message": "No summary paragraph."}), 200
+        #     print("No summary keywords found. Falling back to full text.")
+        #     full_text = extract_full_text(pdf_file_stream)
+        #     final_response = analyze_paragraph(full_text)
+        #     return final_response, 200, {'Content-Type': 'text/plain'}
+
+        if not summary_paragraphs:
+            return jsonify({"message": "No summary paragraph."}), 200
         # if not summary_paragraphs:
         #     full_text = extract_full_text(pdf_file_stream)
         #     return analyze_paragraph(full_text)
