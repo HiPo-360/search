@@ -502,6 +502,16 @@ def extract():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+def extract_full_text(pdf_file_stream):
+    pdf_document = fitz.open(stream=pdf_file_stream, filetype="pdf")
+    full_text = ""
+
+    for page_num in range(len(pdf_document)):
+        page = pdf_document.load_page(page_num)
+        full_text += page.get_text("text") + "\n"
+
+    pdf_document.close()
+    return full_text
 
 @app.route('/callsumarrextract', methods=['POST'])
 def callsumarrextract():
@@ -517,9 +527,15 @@ def callsumarrextract():
         
         # Extract all summary paragraphs
         summary_paragraphs = find_summary_paragraph(pdf_file_stream)
-        
+
         if not summary_paragraphs:
-            return jsonify({"message": "No summary paragraph."}), 200
+            print("No summary keywords found. Falling back to full text.")
+            full_text = extract_full_text(pdf_file_stream)
+            final_response = analyze_paragraph(full_text)
+            return final_response, 200, {'Content-Type': 'text/plain'}
+
+        # if not summary_paragraphs:
+        #     return jsonify({"message": "No summary paragraph."}), 200
         # if not summary_paragraphs:
         #     full_text = extract_full_text(pdf_file_stream)
         #     return analyze_paragraph(full_text)
