@@ -298,32 +298,34 @@ def analyze_insights(summaries):
 
 
     prompt = f"""
-    Section 1: Prompt for identifying strengths and weaknesses from each report
+    Based on the already completed individual summaries of each PDF talent report and all text feedback, please generate a consolidated talent insights report.
 
-    Task:
-    Summarize a psychometric or developmental report as a trusted career coach. Identify key strengths and areas of improvements in 2-3 lines each, focusing on critical insights for self-awareness and growth. Be specific, actionable, and motivational.
-
-    Example Output:
-
-    Strengths:
-    You excel at solving problems under pressure and inspire trust with your collaborative approach.
-
-    Growth Opportunities:
-    Improve time management to reduce stress and build confidence to take bold leadership steps.
-
-    <Input: uploaded report / data>
-
-
-    Section 2: Summary section:
-
-    Play the role of a trusted coach. You have been shared with longitudinal psychometric data (strengths and improvement areas across reports and testimonials by year). Analyse trends across the longitudinal data in terms of strengths and improvement and, provide a 2-paragraph insight covering these key areas:
-
-    Common Strength Themes: Identify recurring strengths and what they reveal about the individual’s core capabilities.
-    Common Improvement Themes: Highlight consistent areas for growth and their impact.
-    Contradictory Feedback or Outliers: Identify any contradictions or unique patterns across reports.
-    Links Between Strengths and Improvement Areas: Examine the Relationship Between Strengths and Improvement Areas (if any improvement area is a possible side effect of a strength of that person)
-    Blind Spots: Point out overlooked areas of potential concern.
-    Recommended Actions: Provide short- and long-term steps to maximize strengths and address improvement areas.
+    For each report summary, include the year, and briefly list that year’s key positives and negatives.
+    
+    Then analyze trends across all years and all sources together under the following 6 sections:
+    
+    1. Common Strength Themes: What strengths appear consistently across multiple years and text feedback? What do they say about the individual’s core qualities and potential?
+    2. Common Improvement Themes: Which development areas show up repeatedly, and how might they be limiting performance or growth?
+    3. Contradictory Feedback or Outliers: Point out any inconsistent observations across different reports or text that stand out.
+    4. Links Between Strengths and Improvement Areas: Are any weaknesses simply overused strengths? Show how strengths might be connected to improvement areas.
+    5. Blind Spots: What areas are rarely or never mentioned, but could be important based on the context or role expectations?
+    6. Recommended Development Actions:
+    
+    Short-Term Actions (quick wins to build momentum)
+    
+    Long-Term Actions (deep growth opportunities)
+    
+    Use simple, clear, motivational language
+    
+    Finally, provide a Year-by-Year Progress Summary identifying:
+    
+    The year(s) that showed the most personal/professional growth
+    
+    The year(s) where challenges or weaknesses were most evident
+    
+    How the person’s strengths and awareness evolved across time
+    
+    Keep the tone supportive, insightful, and clear — like a trusted career coach helping someone understand themselves better and grow with confidence.
 
     Here are the reports:
 
