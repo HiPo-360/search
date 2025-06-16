@@ -350,6 +350,7 @@ def analyze_insights(summaries):
     Here are the reports:
 
     {combined_text}
+    Don't give any bold words. 
     """
 
     completion = client.chat.completions.create(
