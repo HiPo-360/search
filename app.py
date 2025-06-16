@@ -145,16 +145,26 @@ def chunk_text(text, max_tokens=500):
  
 def analyze_paragraph(paragraph):
     prompt_template = """
-    Analyze the following information and identify which of these competencies/skills are mentioned or implied. 
-    For each identified competency, indicate if it's discussed positively or negatively.
-    Then, generate a descriptive sentence explaining why the competencies are positive or negative based on the information.
-    If no weaknesses are explicitly mentioned, infer one based on potential areas of improvement.
-    If no strengths are explicitly mentioned, infer one based on any positive aspects present.
+    You are an experienced career coach analyzing talent assessment reports. Your task is to provide clear, actionable insights for each report individually.
 
+    For each PDF talent report provided:
+    2. List 2-3 KEY STRENGTHS in bullet points - be specific about what makes these strengths valuable
+    3. List 2-3 AREAS FOR IMPROVEMENT in bullet points - frame these constructively with growth potential in mind
+    
+    For any text feedback provided:
+    1. Synthesize the feedback into one cohesive paragraph
+    2. Extract key strengths mentioned (2-3 bullet points)
+    3. Extract improvement areas mentioned (2-3 bullet points)
+    
+    Guidelines:
+    - Use simple, accessible language
+    - Be specific rather than generic (e.g., &quot;strong analytical skills in data interpretation&quot;vs &quot;good with numbers&quot;)
+    - Frame improvements as opportunities, not deficiencies
+    - Focus on actionable insights that promote self-awareness
    
     {paragraph}
 
-    Format your response exactly like this:
+    Format each report analysis clearly with headers and maintain consistent structure throughout as:
 
             Positive: (A descriptive sentence explaining the positive competencies and why they are positive based on the user information.)
             Negative: (A descriptive sentence explaining the negative competencies and why they are negative based on the information.)
@@ -298,40 +308,48 @@ def analyze_insights(summaries):
 
 
     prompt = f"""
-    Based on the already completed individual summaries of each PDF talent report and all text feedback, please generate a consolidated talent insights report.
+    You are a career development expert analyzing multiple talent reports over time. Using the individual report summaries provided, conduct a comprehensive longitudinal analysis.
 
-    For each report summary, include the year, and briefly list that year’s key positives and negatives.
+    IMPORTANT: Consider the chronological order of reports (earliest to most recent) to identify progression patterns.
     
-    Then analyze trends across all years and all sources together under the following 6 sections:
+    Provide insights on these six areas:
     
-    1. Common Strength Themes: What strengths appear consistently across multiple years and text feedback? What do they say about the individual’s core qualities and potential?
-    2. Common Improvement Themes: Which development areas show up repeatedly, and how might they be limiting performance or growth?
-    3. Contradictory Feedback or Outliers: Point out any inconsistent observations across different reports or text that stand out.
-    4. Links Between Strengths and Improvement Areas: Are any weaknesses simply overused strengths? Show how strengths might be connected to improvement areas.
-    5. Blind Spots: What areas are rarely or never mentioned, but could be important based on the context or role expectations?
-    6. Recommended Development Actions:
+    1. **Common Strength Themes**
+    - What core capabilities appear consistently across time?
+    - How have these strengths evolved or manifested differently?
+    - What does this pattern reveal about their natural talents?
     
-    Short-Term Actions (quick wins to build momentum)
+    2. **Common Improvement Themes**
+    - Which development areas persist across reports?
+    - Are there improvements that have been addressed over time?
+    - What impact might unaddressed areas have on career growth?
     
-    Long-Term Actions (deep growth opportunities)
+    3. **Contradictions &amp; Outliers**
+    - Note any conflicting feedback between reports
+    - Identify one-off mentions that don&#39;t fit the pattern
+    - Suggest possible explanations for contradictions
     
-    Use simple, clear, motivational language
+    4. **Strength-Improvement Relationships**
+    - Which improvement areas might be flip sides of strengths?
+    - Example: &quot;Detail orientation&quot; (strength) leading to &quot;analysis paralysis&quot;(improvement)
+    - How can they balance these connected traits?
     
-    Finally, provide a Year-by-Year Progress Summary identifying:
+    5. **Blind Spots**
+    - What important areas aren&#39;t mentioned but should be considered?
+    - Are there career-critical skills not addressed in any report?
+    - What gaps might impact future success?
     
-    The year(s) that showed the most personal/professional growth
+    6. **Development Roadmap**
+    - SHORT-TERM (3-6 months): 2-3 specific actions to address immediate needs
+    - LONG-TERM (1-2 years): 2-3 strategic initiatives for career advancement
+    - Include how to leverage strengths while addressing improvements
     
-    The year(s) where challenges or weaknesses were most evident
-    
-    How the person’s strengths and awareness evolved across time
-    
-    Keep the tone supportive, insightful, and clear — like a trusted career coach helping someone understand themselves better and grow with confidence.
+    Keep language clear and motivational. Focus on growth potential and actionable
+    insights.
 
     Here are the reports:
 
     {combined_text}
-
-    Strictly return ONLY the final two-paragraph insight and the concise strengths and growth opportunities. No headings, no formatting, and no extra text.
     """
 
     completion = client.chat.completions.create(
