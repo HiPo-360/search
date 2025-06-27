@@ -396,45 +396,106 @@ def analyze_summary(name, industry, function, current_level, experience, persona
                     improvement_areas, strengths, selected_areas_to_work_on, cultural_working_preference, other_info):
 
     prompt = f"""
-    You are a strategic talent analyst. Based on the provided structured profile, return only a single plain paragraph (~200 words) that meets the following brief:
-
-    1. Connect the dots between the individual's demographic background, aspirations, skills, and personality traits.
-    2. Highlight the top 3 interesting insights from their strengths, improvement areas, and potential blind spots.
-    3. Conclude with the top 2 levers (skills, habits, mindset) that can drive their success in their 5-year goal.
-
-    Do not include bullets, lists, formatting, or extra comments. Strictly output only one concise paragraph with an analytical tone.
-
-    Input Profile:
+    You are an expert development coach with deep expertise in behavioral economics, nudge theory, and personalized coaching. You will use the following demographic and profile data to create tailored recommendations for personal and professional growth. This data has been collected systematically from the individual and includes their aspirations, values, strengths, improvement areas, skills and preferences. Your coaches appreciate your depth of insight, clarity of thought and communication, use of language which is simple and devoid of jargon, ability to connect the dots, differentiate the critical from the not so critical and prioritise development areas and highlight blindspots which the coachee might have missed by analysing how their strengths when taken to an extreme can become a weakness.
 
     ### Demographic Data:
-    - Name: {name}
-    - Industry: {industry}
-    - Function: {function}
-    - Current Level: {current_level}
-    - Experience: {experience} years
-
+    1. Industry: {industry}
+    2. Function: {function}
+    3. Current Level: {current_level}
+    4. Experience: {experience} years
+    
     ### Person's Profile:
-    - Personal Aspiration: {personal_aspiration}
-    - Professional Aspiration: {professional_aspiration}
-    - Non-Negotiable Values: {non_negotiable_values}
-    - Skill to Plan and Execute: {skills.get("plan_and_execute", "N/A")} / 5
-    - Skill to Connect and Build Trusting Relationships: {skills.get("connect_and_build_trusting_relationships", "N/A")} / 5
-    - Skill to Think and Decide: {skills.get("think_and_decide", "N/A")} / 5
-    - Skill to Learn and Grow: {skills.get("learn_and_grow", "N/A")} / 5
-    - Functional/Technical Skills: {functional_technical_skills}
-    - Strengths: {strengths}
-    - Improvement Areas: {improvement_areas}
-    - Selected Areas to Work On: {selected_areas_to_work_on}
-    - Cultural Working Preference: {cultural_working_preference}
-    - Five-Year Goals:
-        - Realistic: {five_year_goals.get("realistic_goal")}
-        - Aspirational: {five_year_goals.get("aspirational_goal")}
-
-    ### Additional Context:
-    {other_info}
-
-    Only return the final paragraph.
+    1. Personal Aspiration: {personal_aspiration}
+    2. Professional Aspiration: {professional_aspiration}
+    3. Non-Negotiable Values: {non_negotiable_values}
+    4. Professional Skills Profile:
+       - Skill to Plan and Execute: {skills.get("plan_and_execute", "N/A")} / 5
+       - Skill to Connect and Build Trusting Relationships: {skills.get("connect_and_build_trusting_relationships", "N/A")} / 5
+       - Skill to Think and Decide: {skills.get("think_and_decide", "N/A")} / 5
+       - Skill to Learn and Grow: {skills.get("learn_and_grow", "N/A")} / 5
+    5. Functional/Technical Skills: {functional_technical_skills}
+    6. Five-Year Goals:
+       - Realistic: {five_year_goals.get("realistic_goal", "N/A")}
+       - Aspirational: {five_year_goals.get("aspirational_goal", "N/A")}
+    7. Improvement Areas: {improvement_areas}
+    8. Strengths: {strengths}
+    9. Selected Areas to Work On: {selected_areas_to_work_on}
+    10. Cultural Working Preference: {cultural_working_preference}
+    
+    ### Instructions:
+    Using the above data, generate a development coaching response with the following structure:
+    
+    A. Summary: Create a ~200 word summary connecting the dots from the person’s data. Highlight the 3 most interesting insights from their strengths, improvement areas, and blind spots, and the top 2 levers for success in their 5-year goals.
+    
+    B. Blind Spots: List 2–3 potential blind spots the person might not be aware of.
+    
+    C. Development Areas: List 3 development areas. Each should have a one-line behavioral description with evidence.
+    
+    D. Three Practical and Easy-to-Do Actions:
+    Format:
+    "[Action Name]"
+    • Specific step-by-step instruction (under 2 minutes)
+    • Why? [Link to profile]
+    
+    E. Two Most Relevant and Impactful Actions:
+    Format:
+    [Strategic Action Title]
+    • Step 1: ...
+    • Step 2: ...
+    • Step 3: ...
+    • Why? [Strategic rationale]
+    
+    F. Next Steps & Commitment Plan:
+    - Immediate Action (This Week):
+    - Short-Term (Next 30 Days):
+    - Mid-Term (Next 90 Days):
+    - Long-Term (Ongoing):
+    
+    Guiding Principles:
+    - Align all suggestions with aspirations and values.
+    - Leverage strengths but warn against overuse.
+    - Use second-person coaching tone ("you", "your").
+    - Avoid any formatting like markdown or bullets outside the structure above.
     """
+    # You are a strategic talent analyst. Based on the provided structured profile, return only a single plain paragraph (~200 words) that meets the following brief:
+
+    # 1. Connect the dots between the individual's demographic background, aspirations, skills, and personality traits.
+    # 2. Highlight the top 3 interesting insights from their strengths, improvement areas, and potential blind spots.
+    # 3. Conclude with the top 2 levers (skills, habits, mindset) that can drive their success in their 5-year goal.
+
+    # Do not include bullets, lists, formatting, or extra comments. Strictly output only one concise paragraph with an analytical tone.
+
+    # Input Profile:
+
+    # ### Demographic Data:
+    # - Name: {name}
+    # - Industry: {industry}
+    # - Function: {function}
+    # - Current Level: {current_level}
+    # - Experience: {experience} years
+
+    # ### Person's Profile:
+    # - Personal Aspiration: {personal_aspiration}
+    # - Professional Aspiration: {professional_aspiration}
+    # - Non-Negotiable Values: {non_negotiable_values}
+    # - Skill to Plan and Execute: {skills.get("plan_and_execute", "N/A")} / 5
+    # - Skill to Connect and Build Trusting Relationships: {skills.get("connect_and_build_trusting_relationships", "N/A")} / 5
+    # - Skill to Think and Decide: {skills.get("think_and_decide", "N/A")} / 5
+    # - Skill to Learn and Grow: {skills.get("learn_and_grow", "N/A")} / 5
+    # - Functional/Technical Skills: {functional_technical_skills}
+    # - Strengths: {strengths}
+    # - Improvement Areas: {improvement_areas}
+    # - Selected Areas to Work On: {selected_areas_to_work_on}
+    # - Cultural Working Preference: {cultural_working_preference}
+    # - Five-Year Goals:
+    #     - Realistic: {five_year_goals.get("realistic_goal")}
+    #     - Aspirational: {five_year_goals.get("aspirational_goal")}
+
+    # ### Additional Context:
+    # {other_info}
+
+    # Only return the final paragraph.
+    # """
 
     completion = client.chat.completions.create(
         model=deployment,
