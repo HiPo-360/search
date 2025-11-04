@@ -1094,45 +1094,7 @@ Output JSON format:
     except Exception as e:
         raise ValueError(f"Error generating prompt: {str(e)}")
 
-# @app.route("/culture_preference", methods=["POST"])
-# def culture_preference():
-#     try:
-#         # Get and validate input data
-#         coaching_data = request.json
-#         if not coaching_data:
-#             return jsonify({"error": "No data provided"}), 400
-
-#         # Generate prompt
-#         formatted_prompt = generate_prompt1(coaching_data)
-
-#         # Call Azure OpenAI
-#         completion = client.chat.completions.create(
-#             model=deployment,
-#             messages=[{"role": "user", "content": formatted_prompt}],
-#             max_tokens=1500,
-#             temperature=0.3,
-#             top_p=0.95,
-#             frequency_penalty=0,
-#             presence_penalty=0,
-#             stream=False
-#         )
-
-#         # Extract and validate response
-#         ai_response = completion.choices[0].message.content
-#         try:
-#             recommendations = json.loads(ai_response)
-#             if not isinstance(recommendations, dict) or 'actions' not in recommendations:
-#                 return jsonify({"error": "Invalid AI response format"}), 500
-#             return jsonify(recommendations)
-#         except json.JSONDecodeError:
-#             return jsonify({"error": "Invalid JSON response from AI"}), 500
-
-#     except ValueError as ve:
-#         return jsonify({"error": str(ve)}), 400
-#     except Exception as e:
-#         print("Error calling Azure OpenAI:", str(e))
-#         return jsonify({"error": "Failed to generate recommendations"}), 500
-
+ 
 @app.route("/culture_preference", methods=["POST"])
 def culture_preference():
     try:
