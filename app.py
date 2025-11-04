@@ -457,6 +457,45 @@ def analyze_summary(name, industry, function, current_level, experience, persona
     - Use second-person coaching tone ("you", "your").
     - Avoid any formatting like markdown or bullets outside the structure above.
     """
+    # You are a strategic talent analyst. Based on the provided structured profile, return only a single plain paragraph (~200 words) that meets the following brief:
+
+    # 1. Connect the dots between the individual's demographic background, aspirations, skills, and personality traits.
+    # 2. Highlight the top 3 interesting insights from their strengths, improvement areas, and potential blind spots.
+    # 3. Conclude with the top 2 levers (skills, habits, mindset) that can drive their success in their 5-year goal.
+
+    # Do not include bullets, lists, formatting, or extra comments. Strictly output only one concise paragraph with an analytical tone.
+
+    # Input Profile:
+
+    # ### Demographic Data:
+    # - Name: {name}
+    # - Industry: {industry}
+    # - Function: {function}
+    # - Current Level: {current_level}
+    # - Experience: {experience} years
+
+    # ### Person's Profile:
+    # - Personal Aspiration: {personal_aspiration}
+    # - Professional Aspiration: {professional_aspiration}
+    # - Non-Negotiable Values: {non_negotiable_values}
+    # - Skill to Plan and Execute: {skills.get("plan_and_execute", "N/A")} / 5
+    # - Skill to Connect and Build Trusting Relationships: {skills.get("connect_and_build_trusting_relationships", "N/A")} / 5
+    # - Skill to Think and Decide: {skills.get("think_and_decide", "N/A")} / 5
+    # - Skill to Learn and Grow: {skills.get("learn_and_grow", "N/A")} / 5
+    # - Functional/Technical Skills: {functional_technical_skills}
+    # - Strengths: {strengths}
+    # - Improvement Areas: {improvement_areas}
+    # - Selected Areas to Work On: {selected_areas_to_work_on}
+    # - Cultural Working Preference: {cultural_working_preference}
+    # - Five-Year Goals:
+    #     - Realistic: {five_year_goals.get("realistic_goal")}
+    #     - Aspirational: {five_year_goals.get("aspirational_goal")}
+
+    # ### Additional Context:
+    # {other_info}
+
+    # Only return the final paragraph.
+    # """
 
     completion = client.chat.completions.create(
         model=deployment,
