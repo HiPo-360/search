@@ -676,6 +676,214 @@ def development_coaching():
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
+# def generate_coaching_recommendations(coaching_data):
+#     """Process the coaching data using Azure OpenAI to generate recommendations"""
+    
+#     # Build optional blocks only if present
+#     stakeholder_feedback = coaching_data.get("stakeholder_feedback")
+#     longitudinal_data = coaching_data.get("longitudinal_data")
+#     team_culture = coaching_data.get("team_working_culture_preference")
+
+#     optional_sections = ""
+#     if team_culture:
+#         optional_sections += f"""
+#         ### Team Working Culture Preference (optional)
+
+#         The individual has marked their personal culture preference to work in, and then the cultural preference of the team they work in.
+
+#         **Dimensions covered:**
+
+#         1. **Individual vs Collective Achievement**
+#         - Respondent’s self-preference: {team_culture.get("individual_vs_collective_self", "<report_5_19>")}
+#         - Team preference: {team_culture.get("individual_vs_collective_team", "<report_5_19>")}
+#         - Gap: {team_culture.get("gap_individual_vs_collective", "<report_5_19>")}
+
+#         2. **Team Centric vs Customer Centric Focus**
+#         - Respondent’s self-preference: {team_culture.get("team_vs_customer_self", "<report_5_19>")}
+#         - Team preference: {team_culture.get("team_vs_customer_team", "<report_5_19>")}
+#         - Gap: {team_culture.get("gap_team_vs_customer", "<report_5_19>")}
+
+#         3. **Process vs Results Orientation**
+#         - Respondent’s self-preference: {team_culture.get("process_vs_results_self", "<report_5_19>")}
+#         - Team preference: {team_culture.get("process_vs_results_team", "<report_5_19>")}
+#         - Gap: {team_culture.get("gap_process_vs_results", "<report_5_19>")}
+
+#         4. **Personal vs Stakeholders Expectations**
+#         - Respondent’s self-preference: {team_culture.get("personal_vs_stakeholder_self", "<report_5_19>")}
+#         - Team preference: {team_culture.get("personal_vs_stakeholder_team", "<report_5_19>")}
+#         - Gap: {team_culture.get("gap_personal_vs_stakeholder", "<report_5_19>")}
+
+#         5. **Deliberate vs Radical Change Approach**
+#         - Respondent’s self-preference: {team_culture.get("deliberate_vs_radical_self", "<report_5_19>")}
+#         - Team preference: {team_culture.get("deliberate_vs_radical_team", "<report_5_19>")}
+#         - Gap: {team_culture.get("gap_deliberate_vs_radical", "<report_5_19>")}
+
+#         6. **Structured vs Flexible Planning**
+#         - Respondent’s self-preference: {team_culture.get("structured_vs_flexible_self", "<report_5_19>")}
+#         - Team preference: {team_culture.get("structured_vs_flexible_team", "<report_5_19>")}
+#         - Gap: {team_culture.get("gap_structured_vs_flexible", "<report_5_19>")}
+
+#         7. **Competitive vs Collaborative Spirit**
+#         - Respondent’s self-preference: {team_culture.get("competitive_vs_collaborative_self", "<report_5_19>")}
+#         - Team preference: {team_culture.get("competitive_vs_collaborative_team", "<report_5_19>")}
+#         - Gap: {team_culture.get("gap_competitive_vs_collaborative", "<report_5_19>")}
+
+#         8. **Perfect vs Practical Solutions**
+#         - Respondent’s self-preference: {team_culture.get("perfect_vs_practical_self", "<report_5_19>")}
+#         - Team preference: {team_culture.get("perfect_vs_practical_team", "<report_5_19>")}
+#         - Gap: {team_culture.get("gap_perfect_vs_practical", "<report_5_19>")}
+
+#         #### Extracted Data (Raw JSON):
+#         {json.dumps(team_culture, indent=2)}
+#         """
+
+#     if stakeholder_feedback:
+#         optional_sections += f"""
+#     ### **Stakeholder Feedback (optional)**
+
+#     1. **Stakeholder’s perception of the individual’s aspiration**:
+#     - Family/Friends: {stakeholder_feedback.get("family_friends1", "")}
+#     - Managers: {stakeholder_feedback.get("managers1", "")}
+#     - Colleagues: {stakeholder_feedback.get("colleague1", "")}
+#     - Reportees: {stakeholder_feedback.get("reportees1", "")}
+
+#     2. **Stakeholder’s perception of the individual’s non-negotiable values**:
+#     - Family/Friends: {stakeholder_feedback.get("family_friends2", "")}
+#     - Managers: {stakeholder_feedback.get("managers2", "")}
+#     - Colleagues: {stakeholder_feedback.get("colleague2", "")}
+#     - Reportees: {stakeholder_feedback.get("reportees2", "")}
+
+#     3. **Professional Skills Profile**:
+#     - Plan and Execute: {stakeholder_feedback.get("plan_execute_avg", "N/A")} / 5  
+#     - Connect and Build Trust: {stakeholder_feedback.get("connect_trust_avg", "N/A")} / 5  
+#     - Think and Decide: {stakeholder_feedback.get("think_decide_avg", "N/A")} / 5  
+#     - Learn and Grow: {stakeholder_feedback.get("learn_grow_avg", "N/A")} / 5  
+
+#     5. **Team Working Culture Preference** (Stakeholder perspective):
+
+#     - Individual vs Collective Achievement: {stakeholder_feedback.get("culture_individual_collective", "")}
+#     - Team Centric vs Customer Centric Focus: {stakeholder_feedback.get("culture_team_customer", "")}
+#     - Process vs Results Orientation: {stakeholder_feedback.get("culture_process_results", "")}
+#     - Personal vs Stakeholder Expectations: {stakeholder_feedback.get("culture_personal_stakeholder", "")}
+#     - Deliberate vs Radical Change Approach: {stakeholder_feedback.get("culture_deliberate_radical", "")}
+#     - Structured vs Flexible Planning: {stakeholder_feedback.get("culture_structured_flexible", "")}
+#     - Competitive vs Collaborative Spirit: {stakeholder_feedback.get("culture_competitive_collaborative", "")}
+#     - Perfect vs Practical Solutions: {stakeholder_feedback.get("culture_perfect_practical", "")}
+#     """
+
+#         if longitudinal_data:
+#             optional_sections += f"""
+#     ### Longitudinal Data (optional)
+#     {json.dumps(longitudinal_data, indent=2)}
+#     """
+#     # Create prompt with template and coaching data
+#     prompt_template = """
+# You are an expert development coach with deep expertise in behavioral economics, nudge theory, and personalized coaching. 
+# Use the following demographic and profile data to create tailored recommendations for personal and professional growth.
+# You are known for your depth of insight, clarity of thought and communication, use of language which is simple and devoid of jargon,
+# ability to connect the dots,differentiate the critical from the not so critical and prioritise development areas andhighlight blindspots which the coachee might have missed by analysing how theirstrengths when taken to an extreme can become a weakness.
+
+# ### Demographic Data:
+# 1. Industry: {industry}
+# 2. Function: {function}
+# 3. Current Level: {current_level}
+# 4. Experience: {experience}
+
+# ### Person's Profile:
+# 1. Personal Aspiration: {personal_aspiration}
+# 2. Professional Aspiration: {professional_aspiration}
+# 3. Non-Negotiable Values: {non_negotiable_values}
+# 4. Professional Skills Profile:
+#    - Skill to Plan and Execute: {skills[plan_and_execute]} out of 5
+#    - Skill to Connect and Build Trusting Relationships: {skills[connect_and_build_trusting_relationships]} out of 5
+#    - Skill to Think and Decide: {skills[think_and_decide]} out of 5
+#    - Skill to Learn and Grow: {skills[learn_and_grow]} out of 5
+# 5. Functional/Technical Skills: {functional_technical_skills}
+# 6. Five-Year Goals:
+#    - Realistic Goal: {five_year_goals[realistic_goal]}
+#    - Aspirational Goal: {five_year_goals[aspirational_goal]}
+# 7. Improvement Areas: {improvement_areas}
+# 8. Strengths: {strengths}
+
+# ### Selected Areas to Work On: {selected_areas_to_work_on}
+# ### Cultural Working Preference: {cultural_working_preference}
+
+# {optional_sections}
+
+# Generate a JSON response with the following structure:
+# {{
+#   "targeted_questions": [
+#     {{
+#       "topic": "Topic area (e.g., Delegation)",
+#       "question": "Specific behavioral question",
+#       "bias": "Name and brief explanation of bias"
+#     }},
+#     // Two more questions
+#   ],
+#   "practical_actions": [
+#     {{
+#       "name": "Action name",
+#       "instruction": "Specific step-by-step instruction taking less than 2 minutes",
+#       "rationale": "Clear rationale linking to profile data"
+#     }},
+#     // Two more actions
+#   ],
+#   "strategic_actions": [
+#     {{
+#       "title": "Strategic action title",
+#       "steps": ["Step 1", "Step 2", "Step 3"],
+#       "rationale": "Strategic rationale linking to career goals"
+#     }},
+#     // One more action
+#   ],
+#   "blind_spots": [
+#     {{
+#       "name": "Blind spot name",
+#       "risk": "Why it's a risk",
+#       "impact": "Impact on aspirations and values",
+#       "solution": "Solution"
+#     }},
+#     // Three more blind spots
+#   ],
+#   "commitment_plan": {{
+#     "immediate": "Specific action for this week",
+#     "short_term": "Specific action for next 30 days",
+#     "mid_term": "Specific action for next 90 days",
+#     "long_term": "Specific action for ongoing"
+#   }}
+# }}
+
+
+# """
+
+
+#     # Format prompt with coaching data
+#     formatted_prompt = prompt_template.format(**coaching_data)
+    
+#     try:
+#         # Call Azure OpenAI for completion
+#         completion = client.chat.completions.create(
+#             model=deployment,
+#             messages=[{"role": "user", "content": formatted_prompt}],
+#             max_tokens=1500,
+#             temperature=0.3,
+#             top_p=0.95,
+#             frequency_penalty=0,
+#             presence_penalty=0,
+#             stream=False
+#         )
+        
+#         # Extract and parse the response
+#         ai_response = completion.choices[0].message.content
+#         recommendations = json.loads(ai_response)
+        
+#         return recommendations
+        
+#     except Exception as e:
+#         print(f"Error calling Azure OpenAI: {str(e)}")
+#         # Return default recommendations if API call fails
+#         return get_default_recommendations(coaching_data)
+
 def generate_coaching_recommendations(coaching_data):
     """Process the coaching data using Azure OpenAI to generate recommendations"""
     
@@ -694,42 +902,42 @@ def generate_coaching_recommendations(coaching_data):
         **Dimensions covered:**
 
         1. **Individual vs Collective Achievement**
-        - Respondent’s self-preference: {team_culture.get("individual_vs_collective_self", "<report_5_19>")}
+        - Respondent's self-preference: {team_culture.get("individual_vs_collective_self", "<report_5_19>")}
         - Team preference: {team_culture.get("individual_vs_collective_team", "<report_5_19>")}
         - Gap: {team_culture.get("gap_individual_vs_collective", "<report_5_19>")}
 
         2. **Team Centric vs Customer Centric Focus**
-        - Respondent’s self-preference: {team_culture.get("team_vs_customer_self", "<report_5_19>")}
+        - Respondent's self-preference: {team_culture.get("team_vs_customer_self", "<report_5_19>")}
         - Team preference: {team_culture.get("team_vs_customer_team", "<report_5_19>")}
         - Gap: {team_culture.get("gap_team_vs_customer", "<report_5_19>")}
 
         3. **Process vs Results Orientation**
-        - Respondent’s self-preference: {team_culture.get("process_vs_results_self", "<report_5_19>")}
+        - Respondent's self-preference: {team_culture.get("process_vs_results_self", "<report_5_19>")}
         - Team preference: {team_culture.get("process_vs_results_team", "<report_5_19>")}
         - Gap: {team_culture.get("gap_process_vs_results", "<report_5_19>")}
 
         4. **Personal vs Stakeholders Expectations**
-        - Respondent’s self-preference: {team_culture.get("personal_vs_stakeholder_self", "<report_5_19>")}
+        - Respondent's self-preference: {team_culture.get("personal_vs_stakeholder_self", "<report_5_19>")}
         - Team preference: {team_culture.get("personal_vs_stakeholder_team", "<report_5_19>")}
         - Gap: {team_culture.get("gap_personal_vs_stakeholder", "<report_5_19>")}
 
         5. **Deliberate vs Radical Change Approach**
-        - Respondent’s self-preference: {team_culture.get("deliberate_vs_radical_self", "<report_5_19>")}
+        - Respondent's self-preference: {team_culture.get("deliberate_vs_radical_self", "<report_5_19>")}
         - Team preference: {team_culture.get("deliberate_vs_radical_team", "<report_5_19>")}
         - Gap: {team_culture.get("gap_deliberate_vs_radical", "<report_5_19>")}
 
         6. **Structured vs Flexible Planning**
-        - Respondent’s self-preference: {team_culture.get("structured_vs_flexible_self", "<report_5_19>")}
+        - Respondent's self-preference: {team_culture.get("structured_vs_flexible_self", "<report_5_19>")}
         - Team preference: {team_culture.get("structured_vs_flexible_team", "<report_5_19>")}
         - Gap: {team_culture.get("gap_structured_vs_flexible", "<report_5_19>")}
 
         7. **Competitive vs Collaborative Spirit**
-        - Respondent’s self-preference: {team_culture.get("competitive_vs_collaborative_self", "<report_5_19>")}
+        - Respondent's self-preference: {team_culture.get("competitive_vs_collaborative_self", "<report_5_19>")}
         - Team preference: {team_culture.get("competitive_vs_collaborative_team", "<report_5_19>")}
         - Gap: {team_culture.get("gap_competitive_vs_collaborative", "<report_5_19>")}
 
         8. **Perfect vs Practical Solutions**
-        - Respondent’s self-preference: {team_culture.get("perfect_vs_practical_self", "<report_5_19>")}
+        - Respondent's self-preference: {team_culture.get("perfect_vs_practical_self", "<report_5_19>")}
         - Team preference: {team_culture.get("perfect_vs_practical_team", "<report_5_19>")}
         - Gap: {team_culture.get("gap_perfect_vs_practical", "<report_5_19>")}
 
@@ -741,13 +949,13 @@ def generate_coaching_recommendations(coaching_data):
         optional_sections += f"""
     ### **Stakeholder Feedback (optional)**
 
-    1. **Stakeholder’s perception of the individual’s aspiration**:
+    1. **Stakeholder's perception of the individual's aspiration**:
     - Family/Friends: {stakeholder_feedback.get("family_friends1", "")}
     - Managers: {stakeholder_feedback.get("managers1", "")}
     - Colleagues: {stakeholder_feedback.get("colleague1", "")}
     - Reportees: {stakeholder_feedback.get("reportees1", "")}
 
-    2. **Stakeholder’s perception of the individual’s non-negotiable values**:
+    2. **Stakeholder's perception of the individual's non-negotiable values**:
     - Family/Friends: {stakeholder_feedback.get("family_friends2", "")}
     - Managers: {stakeholder_feedback.get("managers2", "")}
     - Colleagues: {stakeholder_feedback.get("colleague2", "")}
@@ -771,11 +979,12 @@ def generate_coaching_recommendations(coaching_data):
     - Perfect vs Practical Solutions: {stakeholder_feedback.get("culture_perfect_practical", "")}
     """
 
-        if longitudinal_data:
-            optional_sections += f"""
+    if longitudinal_data:
+        optional_sections += f"""
     ### Longitudinal Data (optional)
     {json.dumps(longitudinal_data, indent=2)}
     """
+    
     # Create prompt with template and coaching data
     prompt_template = """
 You are an expert development coach with deep expertise in behavioral economics, nudge theory, and personalized coaching. 
@@ -856,9 +1065,12 @@ Generate a JSON response with the following structure:
 
 """
 
-
+    # ADD optional_sections to the coaching_data dictionary
+    format_data = coaching_data.copy()
+    format_data['optional_sections'] = optional_sections
+    
     # Format prompt with coaching data
-    formatted_prompt = prompt_template.format(**coaching_data)
+    formatted_prompt = prompt_template.format(**format_data)
     
     try:
         # Call Azure OpenAI for completion
