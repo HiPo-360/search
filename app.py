@@ -1382,6 +1382,8 @@ def generate_prompt1(coaching_data):
         
         prompt += """
 
+IMPORTANT: ONLY output valid JSON in the exact format below, with no extra text, no explanations, no markdown:
+
 Based on these inputs, provide 3 actionable coaching recommendations for each cultural preference.
 Output JSON format:
 {
