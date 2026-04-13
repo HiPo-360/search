@@ -2,27 +2,36 @@ from flask import Flask, request, jsonify
 import fitz  # PyMuPDF
 import re
 import io
-from openai import AzureOpenAI
-import json  # Added this import
-
-
+from openai import OpenAI
+import json
+import os
 import requests
-
-
-
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 
-# Azure OpenAI Configuration
-endpoint = "https://hipo-ai.openai.azure.com/"
-deployment = "gpt-4"
-api_key = "1Uty3zR2yIuFmz75r9nDwkAh3mLbNbWZu4XlFDn6AjBoP9foaAE0JQQJ99AJACYeBjFXJ3w3AAAAACOGOqBp"
 
-client = AzureOpenAI(
-    azure_endpoint=endpoint,
-    api_key=api_key,
-    api_version="2024-05-01-preview"
+# Rate Limiter setup
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
 )
+
+
+# Poe API Configuration
+endpoint = "https://api.poe.com/v1"
+deployment = "Claude-3-Haiku"
+api_key = os.getenv("POE_API_KEY")
+
+client = OpenAI(
+    api_key=api_key,
+    base_url=endpoint
+)
+
+
 
 
 
@@ -205,6 +214,7 @@ def analyze_paragraph(paragraph):
 
 # Route to process summary text for competencies
 @app.route('/summary', methods=['POST'])
+@limiter.limit("10 per minute")
 def summary():
     if not request.is_json or 'summary' not in request.json:
         return jsonify({"error": "No summary text provided or invalid request format."}), 400
@@ -368,6 +378,7 @@ def analyze_insights(summaries):
 
 
 @app.route('/insights', methods=['POST'])
+@limiter.limit("5 per minute")
 def insights():
     if not request.is_json or 'summaries' not in request.json:
         return jsonify({"error": "Missing 'summaries' field in request or invalid format."}), 400
@@ -512,6 +523,7 @@ def analyze_summary(name, industry, function, current_level, experience, persona
 
 
 @app.route('/full-summary', methods=['POST'])
+@limiter.limit("5 per minute")
 def full_summary():
     try:
         data = request.json
@@ -596,6 +608,7 @@ def extract_full_text(pdf_file_stream):
     return full_text
 
 @app.route('/callsumarrextract', methods=['POST'])
+@limiter.limit("5 per minute")
 def callsumarrextract():
     if not request.is_json or 'pdf' not in request.json:
         return jsonify({"error": "No PDF URL provided or invalid request format."}), 400

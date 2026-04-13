@@ -3,3 +3,5 @@ pymupdf
 AzureOpenAI
 openai
 requests
+flask-limiter
+gunicorn

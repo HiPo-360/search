@@ -1,18 +1,20 @@
 # search
 
 import os
-from openai import AzureOpenAI
+from openai import OpenAI
 
-# Directly provide the endpoint and deployment values
-endpoint = "https://hipo-ai.openai.azure.com/"
-deployment = "gpt-4"
-api_key = "1Uty3zR2yIuFmz75r9nDwkAh3mLbNbWZu4XlFDn6AjBoP9foaAE0JQQJ99AJACYeBjFXJ3w3AAAAACOGOqBp"  # Replace with your actual API key
 
-client = AzureOpenAI(
-    azure_endpoint=endpoint,
-    api_key=api_key,  # Use the API key for authentication
-    api_version="2024-05-01-preview"
+# Poe API Configuration
+endpoint = "https://api.poe.com/v1"
+deployment = "Claude-3-Haiku"
+api_key = os.getenv("POE_API_KEY")
+
+client = OpenAI(
+    api_key=api_key,
+    base_url=endpoint
 )
+
+
 
 # List of keywords to match in the paragraph
 keywords = [
